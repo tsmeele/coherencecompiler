@@ -1,0 +1,18 @@
+protocol operationFilemodified (client, server, provider, consumer) {
+   atomic Operation { 
+      from client to server "rcDataObjPut";
+      atomic Put {
+         from server to server "rsDataObjPut";
+         from server to provider "rc_data_object_finalize";
+      }
+      from server to server "fileModified";
+      atomic Replication {
+         from server to server "rsDataObjRepl";
+         from server to provider "rc_data_object_finalize";
+      }
+      atomic Replication {
+         from server to server "rsDataObjRepl";
+         from server to provider "rc_data_object_finalize";
+      }
+   }
+}

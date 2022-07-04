@@ -1,0 +1,9 @@
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/Main.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/Parser.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/structures/Tree.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/LexScanner.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/SyntaxTreeIterator.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/TokenType.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/SyntaxTree.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/Token.java
+/home/ton/eclipse-workspace/coherence/src/nl/tsmeele/coherence/LexScanException.java
