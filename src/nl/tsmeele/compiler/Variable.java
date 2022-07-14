@@ -1,25 +1,27 @@
 package nl.tsmeele.compiler;
 
 /**
- * Variable is an instantiated Symbol
+ *
  * @author Ton Smeele
  *
  */
 public class Variable extends Stackable {
 	private static int seq = 0;
 	private int id = 0;
-	private Symbol symbol = null;
+	private String nameSpace = null;
+	private String name = null;
 	private Value value = null;
 	
 	
-	public Variable(Symbol symbol) {
+	public Variable(String nameSpace, String name) {
 		super(StackItemType.VARIABLE);
 		this.id = seq++;
-		this.symbol = symbol;
+		this.nameSpace = nameSpace;
+		this.name = name;
 	}
 	
 	public String toString() {
-		return Integer.toString(id) + "(" + symbol.getName() + ")" ;
+		return name;
 	}
 	
 	public int getId() {
@@ -27,12 +29,13 @@ public class Variable extends Stackable {
 	}
 
 	public String getName() {
-		return symbol.getName();
+		return name;
 	}
 	
-	public Symbol getSymbol() {
-		return symbol;
+	public String getNameSpace() {
+		return nameSpace;
 	}
+	
 	
 	public void setValue(Value value) {
 		this.value = value;
@@ -40,6 +43,11 @@ public class Variable extends Stackable {
 	
 	public Value getValue() {
 		return value;
+	}
+	
+	public boolean equals(Object obj) {
+		Variable v = (Variable) obj;
+		return nameSpace.equals(v.nameSpace) && name.equals(v.name);
 	}
 	
 }

@@ -49,6 +49,11 @@ public class Value extends Stackable {
 		return type == ValueType.INTEGER;
 	}
 	
+	public boolean equals(Object obj) {
+		Value v = (Value) obj;
+		return text.equals(v.text) && number == v.number; 
+	}
+	
 	
 	public String getString() {
 		return text;

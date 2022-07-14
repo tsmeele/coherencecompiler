@@ -3,34 +3,46 @@ package nl.tsmeele.compiler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 
 import nl.tsmeele.generator.mcrl2.Mcrl2Generator;
 import nl.tsmeele.generator.plantuml.PlantumlGenerator;
-import nl.tsmeele.grammar.Protocol;
+import nl.tsmeele.grammar.Program;
 
 
 public class Main {
-	static boolean DEBUG = false;
-	static boolean generateMcrl2 = true;
-	static boolean generatePlantuml = false;
+	static boolean DEBUG = true;
+	static boolean generateMcrl2 = false;
+	static boolean generatePlantuml = true;
+	static boolean onlyShowSyntax = false;
 
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
 		if (DEBUG) System.out.println("Coherence Protocol DSL compiler");
+		if (onlyShowSyntax) {
+			Term g = new Program();
+			System.out.println(g.toAllSyntax());
+			System.exit(0);
+		}
 	
 		try {
 			// (1) LEXICAL SCAN
 			TokenList tokens = lexicalScan();
+			if (DEBUG) System.out.println(tokens);
 			
 			// (2) SYNTAX ANALYSIS
-			Term startTerm = new Protocol();
-			AST ast = startTerm.executeParse(tokens.extractStripped());
+			Term startTerm = new Program();
+			AST ast = startTerm.parse(tokens.extractStripped());
 			if (DEBUG) System.out.println("tree is:\n" + ast.toString());
-		
+
+			
 			// (3) SEMANTICS ANALYSIS
 			ast.analyze();
 			if (DEBUG) System.out.println("Congratulations, semantic analysis revealed no errors!");
-		
+			if (DEBUG) System.out.println("tree is:\n" + ast.toString());
+
+			//System.exit(1);
+
 			// (4) CODE GENERATION
 			if (generateMcrl2) {
 				CodeGenerator code = new Mcrl2Generator();

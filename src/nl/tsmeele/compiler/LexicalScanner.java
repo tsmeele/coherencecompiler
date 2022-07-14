@@ -41,24 +41,22 @@ public class LexicalScanner {
 		}
 		int columnNo = 0;
 		while (line.length() > 0) {
-			boolean matchFound = false;
-			// we use the ordinal sequence (!) to try match tokentype patterns
+			String source = "";
+			TokenType tt = null;
+			// we choose the match longest in length  
 			for (TokenType tType : TokenType.values()) {
 				Matcher m = patternsTable.get(tType).matcher(line);
-				if (m.find()) {
-					String source = m.group(0);
-					tokens.add(new Token(tType, source, new Location(lineNo, columnNo)));
-					line = line.substring(source.length());
-					columnNo = columnNo + source.length();
-					matchFound = true;
-					break;
+				if (m.find() && m.group(0).length() > source.length()) {
+					source = m.group(0);
+					tt = tType;
 				}
 			}
-			if (!matchFound) {
-				// If configured, token type "UNSUPPORTED" is a catch-all 
-				// and should avoid that we ever need to throw an exception
+			if (source.length() == 0) {
 				throw new LexicalScanException(lineNo, columnNo, line);
 			}
+			tokens.add(new Token(tt, source, new Location(lineNo, columnNo)));
+			line = line.substring(source.length());
+			columnNo = columnNo + source.length();
 		}
 		return tokens;
 	}

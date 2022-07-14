@@ -10,6 +10,7 @@ public class FunctionAtomicEnter extends StackableFunction {
 	public Stackable apply(CodeGenerator code) {
 		Variable operation = code.popVariable();
 		System.out.println("group " + operation.getName() + " [critical section]");
+		code.push(operation);
 		return null;
 	}
 }

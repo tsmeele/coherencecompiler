@@ -1,34 +1,29 @@
 package nl.tsmeele.grammar;
 
-import nl.tsmeele.compiler.AST;
-import nl.tsmeele.compiler.CodeGenerator;
-import nl.tsmeele.compiler.ParseException;
-import nl.tsmeele.compiler.Term;
-import nl.tsmeele.compiler.TokenList;
 
-public class Statement extends Term {
+import nl.tsmeele.compiler.NonConsumingTerm;
 
-	@Override
-	public AST executeParse(TokenList tokens) throws ParseException {
-		AST ast = initTree();
-		if (tokens.isEmpty()) return ast;
-		TokenType tt = tokens.get(0).getType();
-		switch (tt) {
-		case FROM: {ast.addChild(parse(new CommunicationStatement(), tokens)); break;}
-		case ATOMIC: {ast.addChild(parse(new AtomicStatement(), tokens)); break;}
-		default: throw new ParseException("'Unsupported statement type", tokens);
-		}
-		return ast;
-	}
+public class Statement extends NonConsumingTerm {
 
-	@Override
-	public void executeAnalysis(AST ast) {		
-	}
-
-	@Override
-	public void executeEvaluateEnter(AST ast, CodeGenerator code) {
-		// TODO Auto-generated method stub
+	@SuppressWarnings("rawtypes")
+	public Statement() {
+		super();
 		
+		Class[] coherentRule = {CoherentStatement.class};
+		addRule(TokenType.TEXT_COHERENT, coherentRule);
+		
+		Class[] atomicRule = {AtomicStatement.class};
+		addRule(TokenType.TEXT_ATOMIC, atomicRule);
+		
+		Class[] communicationRule = {CommunicationStatement.class};
+		addRule(TokenType.TEXT_FROM, communicationRule);
+		
+		// 'empty' statement:
+		addRule(TokenType.SEMICOLON, null);
+		// block without any statements at all:
+		addRule(TokenType.CURLYCLOSE, null);
 	}
+	
+
 
 }

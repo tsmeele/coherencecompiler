@@ -12,7 +12,6 @@ public class FunctionCommunication extends StackableFunction {
 	public Stackable apply(CodeGenerator code) {
 		Variable message = code.popVariable();
 		Value threads = code.popValue();
-		Variable stream = code.popVariable();
 		Variable toRole = code.popVariable();
 		Variable fromRole = code.popVariable();
 		String details = "";

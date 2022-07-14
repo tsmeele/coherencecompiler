@@ -1,18 +1,19 @@
 protocol operationFilemodified (client, server, provider, consumer) {
+   coherent obj1, r1, r2;
    atomic Operation { 
-      from client to server "rcDataObjPut";
+      from client to server rcDataObjPut;
       atomic Put {
-         from server to server "rsDataObjPut";
-         from server to provider "rc_data_object_finalize";
+         from server to server rsDataObjPut(obj1);
+         from server to provider rc_data_object_finalize;
       }
-      from server to server "fileModified";
+      from server to server fileModified;
       atomic Replication {
-         from server to server "rsDataObjRepl";
-         from server to provider "rc_data_object_finalize";
+         from server to server rsDataObjRepl(r1);
+         from server to provider rc_data_object_finalize;
       }
       atomic Replication {
-         from server to server "rsDataObjRepl";
-         from server to provider "rc_data_object_finalize";
+         from server to server rsDataObjRepl(r2);
+         from server to provider rc_data_object_finalize;
       }
    }
 }

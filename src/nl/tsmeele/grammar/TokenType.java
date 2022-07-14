@@ -7,7 +7,7 @@ package nl.tsmeele.grammar;
  *
  */
 public enum TokenType {
-	PROTOCOL("protocol"),
+	TEXT_PROTOCOL("protocol"),
 	
 	BRACKETOPEN("[(]"),	//  we use [] to wrap characters that may have special meaning in regexp 
 	BRACKETCLOSE("[)]"),
@@ -17,20 +17,22 @@ public enum TokenType {
 	COMMA("[,]"),
 	EQUALS("[=]"),
 	WHITESPACE("[\\s]+"),
-	LET("let"),
-	FROM("from"),
-	TO("to"),
-	WITH("with"),
-	THREADS("threads"),
-	WHILE("while"),
-	NOT("not"),
-	DONE("done"),
-	PARALLEL("parallel"),
-	AND("and"),
-	ATOMIC("atomic"),
+	TEXT_LET("let"),
+	TEXT_FROM("from"),
+	TEXT_TO("to"),
+	TEXT_WITH("with"),
+	TEXT_THREADS("threads"),
+	TEXT_WHILE("while"),
+	TEXT_NOT("not"),
+	TEXT_DONE("done"),
+	TEXT_PARALLEL("parallel"),
+	TEXT_AND("and"),
+	TEXT_ATOMIC("atomic"),
+	TEXT_COHERENT("coherent"),
 
 	
-	INTEGERLITERAL("[-]{0,1}\\d+"),
+	//INTEGERLITERAL("[-]{0,1}\\d+"),
+	INTEGERLITERAL("\\d+"),
 	
 	// literalstring is delimited with either single or double quotes 
 	// https://stackoverflow.com/questions/2498635/java-regex-for-matching-quoted-string-with-escaped-quotes
@@ -52,16 +54,25 @@ public enum TokenType {
 	COMMENT("//.*"),
 	
 	MINUS("[-]"),  // must have lower precedence than LITERALINTEGER
-	PLUS("[+]"),
+	PLUS("[+]");
 	
-	
-	// last pattern that catches the remaining full line
-	UNSUPPORTED("2.*");
+
 	
 	public final String pattern;
 	
+	
 	private TokenType(String pattern) {
-			this.pattern = pattern;
-		}
+		this.pattern = pattern;
+	}
+	
+	public static boolean isVariable(TokenType tt) {
+		return tt == IDENTIFIER;
+	}
+	
+	public static boolean isValue(TokenType tt) {
+		return tt == INTEGERLITERAL ||
+				tt == SQSTRINGLITERAL ||
+				tt == DQSTRINGLITERAL;
+	}
 
 }

@@ -19,10 +19,6 @@ public class Token {
 		return location.toString() + getType().toString() + ": \"" + source + "\"" ;
 	}
 	
-	public Symbol toSymbol(NameSpace nameSpace) {
-		return new Symbol(nameSpace, source);
-	}
-	
 	public TokenType getType() {
 		return tokenType;
 	}

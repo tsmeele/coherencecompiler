@@ -17,6 +17,10 @@ public class ParseException extends RuntimeException {
 		super("Syntax error: expected " + expected + tokenText(tokens));
 	}
 	
+	public ParseException(String message) {
+		super(message);
+	}
+	
 	
 	
 	private static String tokenText(TokenList tokens) {

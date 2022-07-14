@@ -26,29 +26,23 @@ public abstract class CodeGenerator {
 	// ---------------------------------------------------------------------------
 	// methods available to Term instances during the executeEvaluate phase
 	
-	public void registerAsVariable(Symbol symbol) {
-		if (!isRegistered(symbol)) {
-			variableList.add(new Variable(symbol));
-		}
-	}
-	public boolean isRegistered(Symbol symbol) {
-		for (Variable v : variableList) {
-			// we match on object instance, not on content!
-			// there could be symbols with similar name yet different scope
-			if (v.getSymbol() == symbol) return true;
-		}
-		return false;
-	}
-	
-
 		
 	public void push(Stackable item) {
 		stack.push(item);
 	}
 	
-	public void pushAsVariable(AST ast, Symbol symbol) {
-		push(getVariable(ast,symbol));
+	public boolean isEmptyStack() {
+		return stack.empty();
 	}
+	
+	public int getStackSize() {
+		return stack.size();
+	}
+	
+	public Stackable peek() {
+		return stack.peek();
+	}
+	
 	
 	public Value popValue() {
 		if (stack.peek() == null) {stack.pop(); return null;}
@@ -80,26 +74,7 @@ public abstract class CodeGenerator {
 	}
 	
 	
-	
-	public Variable getVariable(AST ast, Symbol symbol) {
-		Symbol scopedSymbol = ast.getScopedSymbol(symbol);
-		if (scopedSymbol == null) throw new GeneratorException("Symbol undefined in scope: " + symbol);
-		Variable variable = findVariable(scopedSymbol);
-		if (variable == null) throw new GeneratorException("Missing registered variable for symbol " + symbol);
-		return variable;
-	}
-	
-	private Variable findVariable(Symbol symbol) { 
-		for (Variable var : variableList) {
-			// note that could be multiple symbols with the same content,
-			// we look for an exact object instance match
-			if (var.getSymbol() == symbol) return var;
-		}
-		return null;
-	}
-	
 
-	
 	
 	
 	
