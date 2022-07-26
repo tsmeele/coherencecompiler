@@ -2,9 +2,9 @@ package nl.tsmeele.grammar;
 
 import nl.tsmeele.compiler.Term;
 
-public class IrodsObject extends Term {
+public class IrodsAttribute extends Term {
 
-	public IrodsObject() {
+	public IrodsAttribute() {
 		super();
 		addRule(TokenType.IDENTIFIER, null);
 		

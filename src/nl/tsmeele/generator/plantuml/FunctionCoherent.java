@@ -1,20 +1,19 @@
 package nl.tsmeele.generator.plantuml;
 
-import java.util.ArrayList;
-
 import nl.tsmeele.compiler.CodeGenerator;
 import nl.tsmeele.compiler.Stackable;
 import nl.tsmeele.compiler.StackableFunction;
-import nl.tsmeele.compiler.Variable;
 
 public class FunctionCoherent extends StackableFunction {
-	ArrayList<String> variables = new ArrayList<String>();
 
 	@Override
 	public Stackable apply(CodeGenerator code) {
-		Variable irodsObject = code.popVariable();
-		// do something with the variable
-	//	System.out.println("will be coherent: " + irodsObject.getName());
+		// plantuml does not implement any diagram activity for coherent
+		// just clean up the stack after executing the coherent statement
+		int coherentVars = this.getStackFrameSize();
+		for (int i = 0; i < coherentVars; i++) {
+			code.popVariable();
+		}
 		return null;
 	}
 

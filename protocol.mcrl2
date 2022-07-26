@@ -1,0 +1,98 @@
+%-----
+sort RoleName = struct b|Ragent1|R1|R2|Ragent2; 
+sort Value = struct zero|one|ack|two;
+sort SyncStates = struct first|second|more;
+
+act  send,enqueue,trackSend,send',
+     receive,dequeue,updateProp,trackReceive, receive' : RoleName # RoleName # Value;
+     lastRole : RoleName;  
+     lastEq : Bool;
+     lock,lock',unlock,unlock':RoleName # RoleName;
+
+proc
+
+% Participants in our protocol have a process attribute 'prop' that is updated upon a receive
+% As an extension, the property can be locked by another process (the lockholder).
+% NB: requesting process blocks until lock is given
+
+  Role'(N:RoleName,prop:Value,locked:Bool,holder:RoleName) = 
+     sum from:RoleName, v:Value . ((N != from) -> updateProp(from,N,v).Role'(N,v,locked,holder)) +
+     sum requester:RoleName . ( (locked && (requester==holder)) -> unlock(requester,N).  
+               Role'(N,prop,false,requester)) +
+     sum requester:RoleName . ( (!locked) -> lock(requester,N).  
+               Role'(N,prop,true,requester)) ;
+
+
+% Channels are implementation of asynchronous communication, maximum queue size 5 is arbitrary
+
+  Channel'(from,to:RoleName,data:List(Value),size:Int) =
+     sum v:Value . ((size < 5) -> enqueue(from,to,v).Channel'(from,to,data <| v,succ(size)) ) +
+     (size > 0)                -> dequeue(from,to,head(data)).Channel'(from,to,tail(data), pred(size) );
+
+
+% Coherence' is a process that maintains the global coherence property 'last'
+% In addition it acts as a probe, to report coherence status information (via actions):
+%   lastRole(role)  : name of role that receives a new value for its prop
+%   lastEq(boolean) : true if the data values of roles coh1 and coh2 are equal (after the receive action)
+% Note that Coherence' is synchronized upon both send and receive. Further actions are blocked until report actions 
+% are done. This behavior ensures that the next transition after lastRole is always a lastEq action 
+
+  Coherence'(coh1,coh2:RoleName,coh1val,coh2val:Value,last:RoleName) =
+
+     % case 1: coh1 role receives a new value
+     sum from,to:RoleName,v:Value . 
+     (to == coh1) -> (trackReceive(from,to,v).   
+               lastRole(to).lastEq(v==coh2val).     
+               Coherence'(coh1,coh2,v,coh2val,to) ) +
+
+     % case 2: coh2 role receives a new value
+     sum from,to:RoleName,v:Value . 
+     (to == coh2) -> (trackReceive(from,to,v).
+               lastRole(to).lastEq(v==coh1val).
+               Coherence'(coh1,coh2,coh1val,v,to) ) +
+
+     % case 3: some other role receives a new value
+     sum from,to:RoleName,v:Value . 
+     ((to != coh1) && (to != coh2)) -> (trackReceive(from,to,v).
+               lastRole(to).lastEq(coh1val==coh2val).
+               Coherence'(coh1,coh2,coh1val,coh2val,to) ) +
+
+     % case send: just process and ignore
+     sum from,to:RoleName,v:Value . (trackSend(from,to,v).
+               Coherence'(coh1,coh2,coh1val,coh2val,last) ) ;
+
+
+% Data transfer 'Cpq' is a basic construct of our global language:  Cpq --send--> Fpq --receive--> 1
+% mcrl2 operators (sequential,option,parallel,recursion) are used to implement compositional constructs
+% Our local language uses 'send' and 'receive' as its basic constructs. Tau is supported natively by mcrl2.
+    
+  C(from:RoleName,to:RoleName,v:Value) = send(from,to,v).receive(from,to,v); 
+
+
+
+
+P1 = lock(Ragent1,R1).C(Ragent1,R1,one).C(R1,Ragent1,ack).C(Ragent1,R2,one).C(R2,Ragent1,ack).unlock(Ragent1,R1);
+P2 = lock(Ragent2,R1).C(Ragent2,R1,two).C(R1,Ragent2,ack).C(Ragent2,R2,two).C(R2,Ragent2,ack).unlock(Ragent2,R1);
+joinedprotocol = P1||P2;
+
+
+% shorthands added to beautify init process ;)
+
+  Role(N:RoleName) = Role'(N,zero,false,b);
+  Chan(from,to:RoleName) = Channel'(from,to,[],0);
+  Coherence(r1,r2:RoleName) = Coherence'(r1,r2,zero,zero,b);
+
+
+init
+
+  allow(
+     { send', receive', lastRole,lastEq, lock',unlock'},
+     comm( 
+        {send|enqueue|trackSend -> send', receive|dequeue|updateProp|trackReceive -> receive',
+         lock|lock -> lock', unlock|unlock -> unlock'},
+
+        % these processes occur in every system:
+Coherence(R1,R2) ||
+Role(b) || Role(Ragent1) || Chan(Ragent1,R1) || Chan(Ragent1,R2) || Chan(Ragent1,Ragent2) || Role(R1) || Chan(R1,Ragent1) || Chan(R1,R2) || Chan(R1,Ragent2) || Role(R2) || Chan(R2,Ragent1) || Chan(R2,R1) || Chan(R2,Ragent2) || Role(Ragent2) || Chan(Ragent2,Ragent1) || Chan(Ragent2,R1) || Chan(Ragent2,R2) ||
+joinedprotocol 
+) );%-----

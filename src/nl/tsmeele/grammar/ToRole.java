@@ -7,7 +7,7 @@ public class ToRole extends Term {
 	@SuppressWarnings("rawtypes")
 	public ToRole() {
 		super();
-		Class[] toRule = {RoleName.class};
+		Class[] toRule = {Role.class};
 		addRule(TokenType.TEXT_TO, toRule);
 		variableRequiresPriorDeclaration=true;
 	}

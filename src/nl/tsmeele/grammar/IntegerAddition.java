@@ -1,7 +1,6 @@
 package nl.tsmeele.grammar;
 
 import nl.tsmeele.compiler.Term;
-import nl.tsmeele.generator.common.StackableFunctionType;
 
 public class IntegerAddition extends Term {
 

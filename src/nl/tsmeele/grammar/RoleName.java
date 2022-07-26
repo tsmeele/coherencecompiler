@@ -8,6 +8,7 @@ public class RoleName extends Term {
 	public RoleName() {
 		super();
 		addRule(TokenType.IDENTIFIER, null);
+
 	}
 
 }

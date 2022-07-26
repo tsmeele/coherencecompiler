@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 
-public class Tree<T> implements Iterable<Tree<T>> {
+public class Tree<T> implements Iterable<Tree<T>>, Cloneable {
 	private final int INDENT = 2;
 	private T data;
 	private Tree<T> parent = null;
@@ -58,8 +58,6 @@ public class Tree<T> implements Iterable<Tree<T>> {
 		child.parent = null;
 		return children.remove(child);
 	}	
-	
-
 	
 	private String toStringTree(int indent) {
 		String text = blanks(indent) + get().toString() + "\n";

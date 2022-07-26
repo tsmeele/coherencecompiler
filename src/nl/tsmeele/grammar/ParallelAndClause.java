@@ -10,6 +10,7 @@ public class ParallelAndClause extends Term {
 		super();
 		Class[] c = {Protocol.class};
 		addRule(TokenType.TEXT_AND, c);
+		closingTokenType = TokenType.SEMICOLON;
 	}
 
 }

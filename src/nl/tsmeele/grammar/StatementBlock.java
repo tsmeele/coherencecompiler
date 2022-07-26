@@ -8,9 +8,10 @@ public class StatementBlock extends Term {
 	@SuppressWarnings("rawtypes")
 	public StatementBlock() {
 		super();
-		Class[] c = {Statement.class, MoreStatements.class};
-		addRule(TokenType.CURLYOPEN, c);
+		Class[] rule = {Statements.class};
+		addRule(TokenType.CURLYOPEN, rule);
 		closingTokenType = TokenType.CURLYCLOSE;
+		addFunction(StackableFunctionType.STATEMENT_BLOCK);
 	}
 	
 

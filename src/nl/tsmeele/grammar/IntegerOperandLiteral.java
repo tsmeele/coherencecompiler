@@ -2,9 +2,9 @@ package nl.tsmeele.grammar;
 
 import nl.tsmeele.compiler.Term;
 
-public class LiteralIntegerOperand extends Term {
+public class IntegerOperandLiteral extends Term {
 
-	public LiteralIntegerOperand() {
+	public IntegerOperandLiteral() {
 		super();
 		addRule(TokenType.INTEGERLITERAL, null);
 	}

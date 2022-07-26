@@ -7,7 +7,7 @@ public class IntegerExpression extends TermOfTerms {
 	@SuppressWarnings("rawtypes")
 	public IntegerExpression() {
 		super();
-		Class[] rule  = {IntegerOperand.class, IntegerOperation.class};
+		Class[] rule  = {IntegerOperand.class, IntegerOperations.class};
 		addDefaultRule(rule);	
 	}
 

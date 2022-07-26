@@ -7,7 +7,7 @@ public class FromRole extends Term {
 	@SuppressWarnings("rawtypes")
 	public FromRole() {
 		super();
-		Class[] fromRule = {RoleName.class};
+		Class[] fromRule = {Role.class};
 		addRule(TokenType.TEXT_FROM, fromRule);
 		variableRequiresPriorDeclaration=true;
 	}

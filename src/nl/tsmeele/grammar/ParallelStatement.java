@@ -8,7 +8,7 @@ public class ParallelStatement extends Term {
 	@SuppressWarnings("rawtypes")
 	public ParallelStatement() {
 		super();
-		Class[] c = {Protocol.class, ParallelAndClause.class, ParallelCloseClause.class};
+		Class[] c = {Protocol.class, ParallelAndClause.class};
 		addRule(TokenType.TEXT_PARALLEL, c);
 	}
 

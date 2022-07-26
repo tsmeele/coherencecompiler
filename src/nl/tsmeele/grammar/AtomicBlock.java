@@ -1,17 +1,22 @@
 package nl.tsmeele.grammar;
 
-import nl.tsmeele.compiler.Term;
-import nl.tsmeele.generator.common.StackableFunctionType;
+import nl.tsmeele.compiler.TermOfTerms;
 
-public class AtomicBlock extends Term {
+/**
+ * AtomicBlock wraps a StatementBlock to facilitate a function  that implements lock/unlock operations.
+ * 
+ * @author Ton Smeele
+ *
+ */
+public class AtomicBlock extends TermOfTerms {
 	
 	@SuppressWarnings("rawtypes")
 	public AtomicBlock() {
 		super();
-		Class[] c = {Statement.class, MoreStatements.class};
-		addRule(TokenType.CURLYOPEN, c);
-		closingTokenType = TokenType.CURLYCLOSE;
-		addFunction(StackableFunctionType.ATOMIC_EXIT);
+		Class[] c = {StatementBlock.class};
+		addDefaultRule(c);
+		addFunction(StackableFunctionType.ATOMIC_BLOCK);
 	}
+
 
 }

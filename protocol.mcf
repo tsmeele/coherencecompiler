@@ -1,0 +1,29 @@
+%-----
+% Check if process attributes of role p and role q remain coherent 
+% 2022.01 TSM
+
+% Our definition of coherence in CTL:
+%    coherence(p,q)   = follows(p,q) AND follows(q,p)
+%        follows(p,q) = last(p) AND (p!=q) => AX( 
+%                          A(not last(p) AND not last(q) U last(q) AND (p==q))  )    
+
+% Implementation of the above CTL formula in mcrl2 muCalculus syntax:
+% part 1: follows(p,q)
+% part 2: follows(q,p)
+ 
+( 
+   % part 1:
+   [true*.lastRole(R1).lastEq(false)]   (                % 1a: AG(last(p) AND p != q  => ...... )
+      [!lastRole(R2)*.lastRole(R1)] false   &&            % 1b: A(not last(p) U last(q) 
+                                                        %     NB: remainder of Until clause 
+                                                        %         is checked as part of 1c 
+      [!lastRole(R2)*.lastRole(R2).lastEq(false)] false   % 1c: A(not last(q) U last(q) AND (p==q)) 
+   )
+&&
+   % part 2:
+   [true*.lastRole(R2).lastEq(false)]   (
+          [!lastRole(R1)*.lastRole(R2)] false  &&
+          [!lastRole(R1)*.lastRole(R1).lastEq(false)] false
+   )
+)
+%-----

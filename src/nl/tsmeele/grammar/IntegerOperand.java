@@ -7,9 +7,9 @@ public class IntegerOperand extends NonConsumingTerm {
 	@SuppressWarnings("rawtypes")
 	public IntegerOperand() {
 		super();
-		Class[] bracketedRule = { BracketedIntegerOperand.class};
-		Class[] minusRule = {MinusIntegerOperand.class};
-		Class[] literalRule = {LiteralIntegerOperand.class};
+		Class[] bracketedRule = { IntegerOperandBracketed.class};
+		Class[] minusRule = {IntegerOperandMinus.class};
+		Class[] literalRule = {IntegerOperandLiteral.class};
 		addRule(TokenType.BRACKETOPEN, bracketedRule);
 		addRule(TokenType.MINUS, minusRule);
 		addRule(TokenType.INTEGERLITERAL, literalRule);

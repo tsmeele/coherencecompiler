@@ -17,10 +17,11 @@
       <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-jar-plugin</artifactId>
+   <version>2.4</version>
     <configuration>
         <archive>
             <manifest>
-                <mainClass>nl.tsmeele.coherence.Main</mainClass>
+                <mainClass>nl.tsmeele.compiler.Main</mainClass>
             </manifest>
         </archive>
     </configuration>

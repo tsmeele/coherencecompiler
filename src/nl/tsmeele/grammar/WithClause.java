@@ -1,7 +1,6 @@
 package nl.tsmeele.grammar;
 
 import nl.tsmeele.compiler.OptionalTerm;
-import nl.tsmeele.generator.common.StackableFunctionType;
 
 public class WithClause extends OptionalTerm {
 

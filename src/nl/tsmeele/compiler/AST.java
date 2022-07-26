@@ -1,17 +1,15 @@
 package nl.tsmeele.compiler;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import nl.tsmeele.structures.Tree;
 
 public class AST extends Tree<Term> {
 
-
 	public AST(Term term) {
 		super(term);
 	}
-	
+
 	@Override
 	public AST getParent() {
 		return (AST) super.getParent();
@@ -20,48 +18,53 @@ public class AST extends Tree<Term> {
 	public Iterator<AST> iterateChildren() {
 		return new ASTIterator(this);
 	}
-	
-	// semantic analysis related methods
-	
-	public void analyze() {
-		get().analyze(this);
-		analyzeChildren(this);
-	}
-	
 
-		
-	private void analyzeChildren(AST ast) {
-		Iterator<AST> it = ast.iterateChildren();
+	// creates a 'template copy' of the AST tree
+	// where nodes are new instances of the Terms rather then cloned copies of the Terms
+	public AST createSimilar() {
+		Term t = Term.instantiateRuntimeClass(get().getClass());
+		AST copy = new AST(t);
+		Iterator<AST> it = iterateChildren();
 		while (it.hasNext()) {
 			AST child = it.next();
-			child.get().analyze(child);
-			analyzeChildren(child);
+			AST childCopy = child.createSimilar();
+			copy.addChild(childCopy);
 		}
+		return copy;
 	}
 	
+	// semantic analysis related methods
+
+	public void analyze() {
+		analyzeSubtree(this);
+	}
+
+	private void analyzeSubtree(AST ast) {
+		get().analyze(ast); 
+		Iterator<AST> it = ast.iterateChildren();
+		while (it.hasNext()) {
+			AST subTree = it.next();
+			subTree.analyzeSubtree(subTree);
+		}
+	}
+
 	// evaluation related methods
-	
+
 	public void evaluate(CodeGenerator code) {
 		code.beginEvaluation(this);
-		get().evaluateEnter(this, code);
-		evaluateChildren(this, code);
-		get().evaluateExit(this, code);
+		evaluateSubtree(this, code);
 		code.endEvaluation(this);
 		return;
 	}
-	
-	private void evaluateChildren(AST ast, CodeGenerator code) {
+
+	private void evaluateSubtree(AST ast, CodeGenerator code) {
+		get().evaluateEnter(ast, code);
 		Iterator<AST> it = ast.iterateChildren();
 		while (it.hasNext()) {
 			AST child = it.next();
-			child.get().evaluateEnter(child, code);
-			evaluateChildren(child, code);
-			child.get().evaluateExit(child, code);
+			child.evaluateSubtree(child, code);
 		}
+		get().evaluateExit(ast, code);
 	}
-	
-	
 
-	
-	
 }

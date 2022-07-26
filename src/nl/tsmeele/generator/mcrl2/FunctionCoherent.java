@@ -5,22 +5,23 @@ import java.util.ArrayList;
 import nl.tsmeele.compiler.CodeGenerator;
 import nl.tsmeele.compiler.Stackable;
 import nl.tsmeele.compiler.StackableFunction;
-import nl.tsmeele.compiler.Value;
 import nl.tsmeele.compiler.Variable;
 
 public class FunctionCoherent extends StackableFunction {
-	ArrayList<String> variables = new ArrayList<String>();
-
+	private ArrayList<Variable> roles = new ArrayList<Variable>();
+	
 	@Override
 	public Stackable apply(CodeGenerator code) {
-		Value count = code.popValue();
-		for (int i = 0; i < count.getInteger(); i++) {
-			Variable var = code.popVariable();
-			variables.add(var.getName());
+
+		int coherentVars = this.getStackFrameSize();
+		for (int i = 0; i < coherentVars; i++) {
+			roles.add(code.popVariable());
 		}
-		// do something with the variables
-		((Mcrl2Generator)code).getMcrl2().addCoherentVariables(variables);
+		Mcrl2 mcrl2 = ((Mcrl2Generator)code).getMcrl2();
+		mcrl2.codeCoherent(roles);	// register in the model that these variables need to remain coherent
+		// the coherent statement does not directly produce any target code 
 		return null;
 	}
-
+	
+	
 }

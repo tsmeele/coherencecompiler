@@ -2,12 +2,12 @@ package nl.tsmeele.grammar;
 
 import nl.tsmeele.compiler.OptionalTerm;
 
-public class MoreRoleNames extends OptionalTerm {
+public class MoreRoles extends OptionalTerm {
 
 	@SuppressWarnings("rawtypes")
-	public MoreRoleNames(){
+	public MoreRoles(){
 		super();
-		Class[] rule1 = {RoleName.class, MoreRoleNames.class};
+		Class[] rule1 = {Role.class, MoreRoles.class};
 		addRule(TokenType.COMMA, rule1);;
 	}
 

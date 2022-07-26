@@ -2,10 +2,10 @@ package nl.tsmeele.grammar;
 
 import nl.tsmeele.compiler.Term;
 
-public class BracketedIntegerOperand extends Term {
+public class IntegerOperandBracketed extends Term {
 
 	@SuppressWarnings("rawtypes")
-	public BracketedIntegerOperand()  {
+	public IntegerOperandBracketed()  {
 		super();
 		Class[] rule = {IntegerExpression.class};
 		addRule(TokenType.BRACKETOPEN, rule);

@@ -8,28 +8,28 @@ public class ParseException extends RuntimeException {
 	public ParseException(TokenType expected, TokenList tokens) {
 		super("Syntax error: expected " + expected + tokenText(tokens));
 	}
-	
+
 	public ParseException(TokenType expected, Token token) {
 		super("Syntax error: expected " + expected + tokenText(token));
 	}
-	
+
 	public ParseException(String expected, TokenList tokens) {
 		super("Syntax error: expected " + expected + tokenText(tokens));
 	}
-	
+
 	public ParseException(String message) {
 		super(message);
 	}
-	
-	
-	
+
 	private static String tokenText(TokenList tokens) {
-		if (tokens == null || tokens.isEmpty()) return "";
+		if (tokens == null || tokens.isEmpty())
+			return "";
 		return ", received: " + tokens.get(0).toString();
 	}
-	
+
 	private static String tokenText(Token token) {
-		if (token == null) return "";
+		if (token == null)
+			return "";
 		return ", received: " + token.toString();
 	}
 

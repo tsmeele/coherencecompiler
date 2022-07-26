@@ -1,0 +1,49 @@
+<Program>                 ::= <ParallelStatement> | <Protocol>
+
+<ParallelStatement>       ::= TEXT_PARALLEL <Protocol> <ParallelAndClause>
+<ParallelAndClause>       ::= TEXT_AND <Protocol> SEMICOLON
+
+
+
+<Protocol>                ::= TEXT_PROTOCOL <ProtocolName> <RoleList> <StatementBlock>
+<ProtocolName>            ::= IDENTIFIER  + f:PROTOCOL()
+<RoleList>                ::= BRACKETOPEN <RoleName> [<MoreRoleNames>] BRACKETCLOSE + f:PROTOCOL_ROLES() 
+<RoleName>                ::= IDENTIFIER 
+<MoreRoleNames>           ::= COMMA <RoleName> [<MoreRoleNames>]
+<StatementBlock>          ::= CURLYOPEN <Statement> [<MoreStatements>] CURLYCLOSE
+
+
+<Statement>               ::= <CommunicationStatement> | <AtomicStatement> | <CoherentStatement> | |
+<MoreStatements>          ::= SEMICOLON <Statement> [<MoreStatements>]
+
+
+<CommunicationStatement>  ::= <FromRole> <ToRole> [<WithClause>] <Message>  + f:COMMUNICATION()
+<FromRole>                ::= TEXT_FROM <RoleName>
+<ToRole>                  ::= TEXT_TO <RoleName>
+<WithClause>              ::= TEXT_WITH <IntegerExpression> TEXT_THREADS  + f:WITH_THREADS()
+<Message>                 ::= IDENTIFIER [<BracketedIrodsObject>]  + f:MESSAGE()
+<BracketedIrodsObject>    ::= BRACKETOPEN <IrodsObject> BRACKETCLOSE
+
+
+<AtomicStatement>         ::= TEXT_ATOMIC <AtomicName> <AtomicBlock>
+<AtomicName>              ::= IDENTIFIER  + f:ATOMIC_ENTER()
+<AtomicBlock>             ::= CURLYOPEN <Statement> [<MoreStatements>] CURLYCLOSE  + f:ATOMIC_EXIT()
+
+
+<CoherentStatement>       ::= TEXT_COHERENT <CoherentObject> [<MoreCoherentObjects>]
+<CoherentObject>          ::= <IrodsObject>  + f:COHERENT()
+<MoreCoherentObjects>     ::= COMMA <CoherentObject> [<MoreCoherentObjects>]
+
+
+<IrodsObject>             ::= IDENTIFIER
+
+<IntegerExpression>       ::= <IntegerOperand> [<IntegerOperations>]
+
+<IntegerOperations>       ::= <IntegerSubtraction> [<IntegerOperations>] | <IntegerAddition> [<IntegerOperations>]
+<IntegerSubtraction>      ::= MINUS <IntegerOperand>  + f:INTEGER_SUBTRACTION()
+<IntegerAddition>         ::= PLUS <IntegerOperand>  + f:INTEGER_ADDITION()
+
+<IntegerOperand>          ::= <BracketedIntegerOperand> | <MinusIntegerOperand> | <LiteralIntegerOperand>
+<BracketedIntegerOperand> ::= BRACKETOPEN <IntegerExpression> BRACKETCLOSE
+<MinusIntegerOperand>     ::= MINUS <IntegerExpression>
+<LiteralIntegerOperand>   ::= INTEGERLITERAL

@@ -1,0 +1,12 @@
+
+PROPERTY CHECK:  
+
+cat XX.mcrl2 | mcrl22lps -lregular | lps2pbes --formula=FF.mcf |pbes2bool
+
+
+BISIMULATION CHECK:
+
+cat XX.mcrl2 | mcrl22lps -lregular | lp22lts - XX.lts
+cat YY.mcrl2 | mcrl22lps -lregular | lp22lts - YY.lts
+
+ltscompare -eweak-bisim  XX.lts YY.lts

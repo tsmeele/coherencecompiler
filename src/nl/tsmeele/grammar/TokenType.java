@@ -20,6 +20,7 @@ public enum TokenType {
 	TEXT_LET("let"),
 	TEXT_FROM("from"),
 	TEXT_TO("to"),
+	TEXT_PROTECTS("protects"),
 	TEXT_WITH("with"),
 	TEXT_THREADS("threads"),
 	TEXT_WHILE("while"),
@@ -73,6 +74,10 @@ public enum TokenType {
 		return tt == INTEGERLITERAL ||
 				tt == SQSTRINGLITERAL ||
 				tt == DQSTRINGLITERAL;
+	}
+	
+	public static boolean isStrippable(TokenType tt) {
+		return tt ==  COMMENT || tt == WHITESPACE;
 	}
 
 }
