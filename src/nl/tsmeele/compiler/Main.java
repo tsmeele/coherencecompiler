@@ -19,7 +19,7 @@ import nl.tsmeele.grammar.Program;
 public class Main {
 	static final String PROGRAMNAME = "coherence";
 	static boolean DEBUG = false;
-	static boolean generateMcrl2 = true;
+	static boolean generateMcrl2 = false;
 	static boolean generatePlantuml = false;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
@@ -48,10 +48,10 @@ public class Main {
 				Term g = new Program();
 				out.println(g.toAllSyntax());
 			}
+			
 			// if appropriate, provide user with data entry instructions
-//			if (inputFile == null) {
 			if (in.equals(System.in)) { 
-				System.out.println("Enter source text, end with CTRL-D or 'EOF' on a new line:");
+				System.out.println("Enter source text, end with CTRL-D or a line consisting of 'EOF':");
 			}
 		
 			// (1) LEXICAL SCAN
