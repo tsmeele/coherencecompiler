@@ -26,8 +26,8 @@ protocol operationFilemodified (client, server, provider, consumer) {
 
 and 
 
-protocol two(client,server) {
- from client to server hello;
+protocol two(client2,server) {
+ from client2 to server hello;
  }
  
  ;

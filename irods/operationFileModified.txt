@@ -1,6 +1,6 @@
 protocol operationFilemodified (client, server, provider, consumer) {
- coherent server(obj1), provider(r1);
- coherent server(obj1), provider(r2);
+coherent server(obj1), provider(r1);
+// coherent server(obj1), provider(r2);
    atomic Operation from client protects server(obj1) { 
       from client to server(obj1) rcDataObjPut;
       atomic Put from server(obj1) protects provider(obj1) {

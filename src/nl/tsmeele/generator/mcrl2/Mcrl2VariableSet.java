@@ -2,6 +2,7 @@ package nl.tsmeele.generator.mcrl2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -20,14 +21,15 @@ public class Mcrl2VariableSet {
 	public List<String> roles = new ArrayList<String>();
 	public String[] coherentRoles = new String[2];				
 	public Map<String,String> protocols = new HashMap<String,String>();
-	public boolean addSynchronizedTerminationAction = false;
 	
-
+	public boolean addSynchronizedTerminationAction = false;
+	public CoherentRoles coherentRoleSets = new CoherentRoles();
+	private Iterator<String[]> cohIt = null;
 
 	public String toString() {
 		String text = "Roles: " + roles + "\n" + "Values: " + values + "\n" + 
 				"coherent roles: " + coherentRoles[0] + " " + coherentRoles[1] + "\n" +
-				printMap(protocols);
+				printMap(protocols) + "\nCoherent sets: " + printCoherence();
 		return text;
 	}
 	
@@ -38,6 +40,27 @@ public class Mcrl2VariableSet {
 		}
 		return text;
 	}
+	
+	private String printCoherence() {
+		String text = "";
+		for (ArrayList<String> roleSet : coherentRoleSets) {
+			text = text.concat(roleSet.toString() + "\n");
+		}
+		return text;
+	}
+	
+	public void initializeCoherenceVariations() {
+		cohIt = coherentRoleSets.iterateRoles();
+	}
+	
+	public boolean renderCoherenceVariation() {
+		if (!cohIt.hasNext()) {
+			return false;
+		}
+		coherentRoles = cohIt.next();
+		return true;
+	}
+	
 	
 	// protocol operations, building blocks that can be used to assemble a protocol
 	

@@ -84,12 +84,27 @@ public class Main {
 				Mcrl2VariableSet mVars = code.getMcrl2().populateModel();
 				// perform 
 				// test mcrl2checker:
-				System.out.println(mVars);
-				out = System.out;
-				in = System.in;
+				if (DEBUG) System.out.println(mVars);
+//				out = System.out;
+//				in = System.in;
 				Mcrl2Checker checker = new Mcrl2Checker();
-				System.out.println("NoDeadlock:" + checker.isDeadlockFree(mVars));
-				System.out.println("Coherence: " + checker.isCoherent(mVars));
+				System.out.println("mCRL2 MODEL CHECKING RESULTS USING COHERENCE MODEL:\n");
+				if (mVars.coherentRoleSets.size() > 0) {
+					// protocol includes coherence requirements
+					int count = 1;
+					mVars.initializeCoherenceVariations();
+					System.out.print("Running coherence tests: ");
+					boolean coherentTotal = true;
+					while(coherentTotal == true && mVars.renderCoherenceVariation() ) {
+						System.out.print(".." + count);
+						boolean test = checker.isCoherent(mVars);
+						coherentTotal = coherentTotal && test;
+						count++;
+					}
+					System.out.println("\nProtocol protects coherence as required? :  " + coherentTotal);
+				}
+				System.out.println("Protocol is free of deadlocks? :  " + checker.isDeadlockFree(mVars));
+
 				
 //				Mcrl2VariableSet vars = new Mcrl2VariableSet();
 //				Mcrl2VariableSet varsGlobal = new Mcrl2VariableSet();

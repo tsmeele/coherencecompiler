@@ -10,6 +10,12 @@ import nl.tsmeele.compiler.TargetCode;
 import nl.tsmeele.compiler.Value;
 import nl.tsmeele.compiler.Variable;
 
+/**
+ * Responsible for translation of DSL concepts to mCRL2 concepts.
+ * 
+ * @author Ton Smeele
+ *
+ */
 public class Mcrl2 {
 	private int mSeqNo = 0; // sequence number to produce unique new mCRL2 roles/values 
 	
@@ -21,10 +27,12 @@ public class Mcrl2 {
 	private ArrayList<String> mValues = new ArrayList<String>();
 	
 	// sets of mcrl2 roles that need to remain coherent with each other
-	private ArrayList<ArrayList<String>> coherent = new ArrayList<ArrayList<String>>();
+	private CoherentRoles coherent = new CoherentRoles();
 
 	// protocol definitions
 	private Map<String,String> protocols = new HashMap<String,String>();
+	
+	
 	
 	
 	public String toString() {
@@ -111,7 +119,7 @@ public class Mcrl2 {
 	
 	public Mcrl2VariableSet populateModel() {
 		Mcrl2VariableSet m = new Mcrl2VariableSet();
-
+System.err.println(this);
 		for (String role : roleMapper.keySet()) {
 			String mRole = roleMapper.get(role);
 			m.roles.add(mRole);
@@ -126,15 +134,13 @@ public class Mcrl2 {
 		for (String protocolName : protocols.keySet()) {
 			m.protocols.put(protocolName, protocols.get(protocolName));
 		}
-		// our coherence program model needs at least two roles, so that
-		// we can populate the Coherence process with information on roles
-		// that need to be monitored for coherence.
-		// Initially we populate those roles with arbitrary values, this
-		// can be changed prior to performing a coherence test.
+		m.coherentRoleSets = coherent;
+		// initialize coherence with arbitrary roles so that model is 'complete'
 		m.coherentRoles[0] = m.roles.get(0);
 		m.coherentRoles[1] = m.roles.get(1);
 		return m;
 	}
+	
 
 	
 	
@@ -157,11 +163,14 @@ public class Mcrl2 {
 	private String mValue(String mRole) {
 		String mcrlValue = mRoleValue.get(mRole);
 		if (mcrlValue != null) {
+		//	System.err.println("reusing value " + mcrlValue + " for role " + mRole);
 			return mcrlValue;
 		}
 		// role does not yet have a value, we need to create a new one
 		mcrlValue = Mcrl2VariableSet.valuePrefix + Integer.toString(mSeqNo++); 
 		mValues.add(mcrlValue);
+		mRoleValue.put(mRole, mcrlValue);
+	//	System.err.println("reusing value " + mcrlValue + " for role " + mRole);
 		return mcrlValue;
 	}
 	
