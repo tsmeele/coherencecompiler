@@ -69,6 +69,7 @@ public class StreamFactory {
 			return System.out;
 		}
 		File file = new File(path);
+		file = file.getCanonicalFile();
 		if (file.exists()) {
 			// are we allowed to change an existing file?
 			if (!(append || overwrite)) {

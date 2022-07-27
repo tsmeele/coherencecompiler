@@ -73,7 +73,7 @@ public class PlantumlGenerator extends CodeGenerator {
 		case INTEGER_ADDITION: return new FunctionAddInteger();
 		case INTEGER_SUBTRACTION: return new FunctionSubtractInteger();
 		case WITH_THREADS: return new FunctionWithThreads();
-		case ATOMIC_STATEMENT: return new FunctionAtomicStatement();
+		case ATOMIC: return new FunctionAtomicStatement();
 		case ROLE: return new FunctionRole();
 		case STATEMENT_BLOCK: return new FunctionStatementBlock();
 

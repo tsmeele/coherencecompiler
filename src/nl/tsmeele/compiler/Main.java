@@ -27,25 +27,31 @@ public class Main {
 	static PrintStream out = System.out;
 	
 	final static Map<String,String> commandLineOptions = Map.ofEntries(
-			entry("--debug","-d|--debug"),
-			entry("--help", "-h|--help"),
-			entry("--syntax","-s|--syntax"),
-			entry("--mcrl2", "-m"),
-			entry("--plantuml","-p")
+			entry("--debug","^-d$|^--debug$"),
+			entry("--help", "^-h$|^--help$"),
+			entry("--syntax","^-s$|^--syntax$"),
+			entry("--mcrl2", "^-m$"),
+			entry("--plantuml","^-p$")
 			);
 
 
 	public static void main(String[] args) throws IOException {
 		
 		String phase = null;
-		try {
+		
 			phase = "Preparation";
 			processCommandLine(args);
+		try {
 			if (DEBUG) System.err.println("DEBUG MODE\n" + PROGRAMNAME + "\n");
 		
 			if (showSyntax) {
 				Term g = new Program();
 				out.println(g.toAllSyntax());
+			}
+			// if appropriate, provide user with data entry instructions
+//			if (inputFile == null) {
+			if (in.equals(System.in)) { 
+				System.out.println("Enter source text, end with CTRL-D or 'EOF' on a new line:");
 			}
 		
 			// (1) LEXICAL SCAN
@@ -150,6 +156,7 @@ public class Main {
 		
 		List<String> files = commandLine.getArguments();
 		// redirect input to file, unless name is absent or "-" 
+		System.out.println("arguments =" + files + "=");
 		String inputFile = files.size() < 1 || files.get(0).equals("-") ? null : files.get(0);
 		in = StreamFactory.openInputFile(inputFile);	
 
@@ -157,10 +164,7 @@ public class Main {
 		String outputFile = files.size() < 2 || files.get(0).equals("-") ? null : files.get(1);
 		out = StreamFactory.createOutputFile(outputFile);
 		
-		// if appropriate, provide user with data entry instructions
-		if (inputFile == null) {
-			System.out.println("Enter source text, end with CTRL-D or 'EOF' on a new line:");
-		}
+
 	}
 	
 	
