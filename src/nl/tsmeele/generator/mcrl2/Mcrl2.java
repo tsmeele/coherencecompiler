@@ -63,6 +63,15 @@ public class Mcrl2 {
 	
 	
 	public void codeProtocol(Value protocolCode) {
+		String protocolDefinition = renderCode(protocolCode);
+		// register the protocol body as a definition under a new protocol name
+		String mProtocol = Mcrl2VariableSet.protocolPrefix + Integer.toString(mSeqNo++);
+		protocols.put(mProtocol, protocolDefinition);
+		// reset the "values" of all roles so that the next protocol is independent of current protocol
+		mRoleValue = new HashMap<String,String>();
+	}
+	
+	public static String renderCode(Value protocolCode) {
 		// process code fragments into a protocol by joining them as a sequence of operations
 		LinkedList<TargetCode> fragments = protocolCode.getCode();
 		List<String> renderedFragments = new ArrayList<String>();
@@ -74,12 +83,7 @@ public class Mcrl2 {
 			}
 			renderedFragments.add(f.renderAsString());
 		}
-		String protocolDefinition = Mcrl2VariableSet.sequence(renderedFragments);
-		// register the protocol body as a definition under a new protocol name
-		String mProtocol = Mcrl2VariableSet.protocolPrefix + Integer.toString(mSeqNo++);
-		protocols.put(mProtocol, protocolDefinition);
-		// reset the "values" of all roles so that the next protocol is independent of current protocol
-		mRoleValue = new HashMap<String,String>();
+		return String.join(".", renderedFragments);
 	}
 	
 	
@@ -102,43 +106,47 @@ public class Mcrl2 {
 		//  1) update the toRole with the value sent by the fromRole
 		mRoleValue.put(mTo, mValue(mFrom));
 		//  2) return targetCode for this operation
-		return Mcrl2VariableSet.communication(mFrom, mTo, mValue(mFrom));
+		return "C(" + mFrom + "," + mTo + "," + mValue(mFrom) + ")";
 	}
+	
+
+	
 	
 	public String codeLock(Variable requesterRole, Variable targetRole) {
 		String mFrom = mRole(requesterRole);
 		String mTo = mRole(targetRole);
-		return Mcrl2VariableSet.lock(mFrom, mTo);
+		return "lock(" + mFrom + "," + mTo + ")";
 	}
 
+
+	
 	public String codeUnlock(Variable requesterRole, Variable targetRole) {
 		String mFrom = mRole(requesterRole);
 		String mTo = mRole(targetRole);
-		return Mcrl2VariableSet.unlock(mFrom, mTo);
+		return "unlock(" + mFrom + "," + mTo + ")";
 	}
 	
 	
 	
 	public Mcrl2VariableSet populateModel() {
-		Mcrl2VariableSet m = new Mcrl2VariableSet();
-		for (String role : roleMapper.keySet()) {
-			String mRole = roleMapper.get(role);
-			m.roles.add(mRole);
-		}
-		if (m.roles.size() < 2) {
+		if (roleMapper.keySet().size() < 2) {
 			// we require at least two roles to populate a coherence program model
 			return null;
 		}
+		Mcrl2VariableSet m = new Mcrl2VariableSet();
+		for (String role : roleMapper.keySet()) {
+			String mRole = roleMapper.get(role);
+			m.registerRole(mRole);
+		}
 		for (String value : mValues) {
-			m.values.add(value);
+			m.registerValue(value);
 		}
 		for (String protocolName : protocols.keySet()) {
-			m.protocols.put(protocolName, protocols.get(protocolName));
+			m.registerProtocol(protocolName, protocols.get(protocolName));
 		}
-		m.coherentRoleSets = coherent;
+		m.registerCoherentRoleSets(coherent);
 		// initialize coherence with arbitrary roles so that model is 'complete'
-		m.coherentRoles[0] = m.roles.get(0);
-		m.coherentRoles[1] = m.roles.get(1);
+		m.setCoherent(m.roles.get(0), m.roles.get(1));
 		return m;
 	}
 	

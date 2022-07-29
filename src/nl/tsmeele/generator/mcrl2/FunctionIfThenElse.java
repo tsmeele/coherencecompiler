@@ -29,27 +29,28 @@ public class FunctionIfThenElse extends StackableFunction {
 		
 		// we build the choice target code using the then-clause results as a foundation/collector
 		//     "(" <then> ")" "+" "(" <else> ")"
-		String total = "(" + render(thenResult.getCode()) + ")+(";
+		String total = "(" + Mcrl2.renderCode(thenResult) + ")+(";
 		String elseText = "tau";
 		if (elseResult != null) {
-			elseText = render(elseResult.getCode()); 
+			elseText = Mcrl2.renderCode(elseResult); 
 		}
 		total = total.concat(elseText + ")");
 		Value totalCode = new Value(new StringTargetCode(total));
 		return totalCode;
 	}
+}
 
 	
-	private String render(LinkedList<TargetCode> code) {
-		LinkedList<String> filtered = new LinkedList<String>();
-		for (TargetCode fragment : code) {
-			String text = fragment.renderAsString();
-			if (text == null) {
-				continue;
-			}
-			filtered.add(text);
-		}
-		// render as sequence of operations
-		return String.join(".", filtered);
-	}
-}
+//	private String render(LinkedList<TargetCode> code) {
+//		LinkedList<String> filtered = new LinkedList<String>();
+//		for (TargetCode fragment : code) {
+//			String text = fragment.renderAsString();
+//			if (text == null) {
+//				continue;
+//			}
+//			filtered.add(text);
+//		}
+//		// render as sequence of operations
+//		return String.join(".", filtered);
+//	}
+//}
