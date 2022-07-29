@@ -1,6 +1,5 @@
 package nl.tsmeele.generator.mcrl2;
 
-import java.util.Set;
 
 /**
  * The class Mcrl2ProgramWriter manages the templates for an Mcrl2 program and related formula source text.
@@ -39,7 +38,7 @@ public class Mcrl2Template {
 			// add a definition for this protocol, the hashmap key is the protocol name, the value carries the protocol body
 			if (vars.addSynchronizedTerminationAction) {
 				// we introduce an extra action "doneN" per protocol to be able to assert termination
-				text = text.concat(protocol + " = " + vars.protocols.get(protocol) + ".done" + Integer.toString(i) + ";\n");
+				text = text.concat(protocol + " = (" + vars.protocols.get(protocol) + ").done" + Integer.toString(i) + ";\n");
 				i++;
 			} else {
 				text = text.concat(protocol + " = " + vars.protocols.get(protocol) + ";\n");
@@ -57,7 +56,7 @@ public class Mcrl2Template {
 	 * @return mcrl2 formatted enumeration of all Value
 	 */
 	private String insertValues() {
-		String text = vars.initialValue;
+		String text = Mcrl2VariableSet.initialValue;
 		for (String v :  vars.values) {
 			text = text.concat("|" + v);
 		}
@@ -69,7 +68,7 @@ public class Mcrl2Template {
 	 * @return mcrl2 formatted enumeration of all RoleName
 	 */
 	private String insertRoles() {
-		String text = vars.dormantRole;
+		String text = Mcrl2VariableSet.dormantRole;
 		for (String r : vars.roles) {
 			text = text.concat("|" + r);
 		}
@@ -85,7 +84,7 @@ public class Mcrl2Template {
 	 * @return mcrl2 formatted init list of processes
 	 */
 	private String insertRoleInits() {
-		String text = "Role(" + vars.dormantRole + ")";
+		String text = "Role(" + Mcrl2VariableSet.dormantRole + ")";
 		for (String r : vars.roles) {
 			// add role
 			text = text.concat(" || Role(" + r + ")");

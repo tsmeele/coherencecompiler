@@ -28,6 +28,7 @@
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/FunctionDefTerm.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/IntegerExpression.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/CoherentStatement.java
+/home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/plantuml/FunctionIfThenElse.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/AtomicBlock.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/AtomicStatement.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/ParallelAndClause.java
@@ -36,7 +37,9 @@
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/Location.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/common/FunctionRole.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/StackableFunction.java
+/home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/IfStatement.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/common/FunctionStatementBlock.java
+/home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/ElseClause.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/Protocol.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/IntegerOperandBracketed.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/TokenList.java
@@ -49,6 +52,7 @@
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/MoreRoles.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/plantuml/FunctionProtocol.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/GeneratorException.java
+/home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/ThenClause.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/ProtocolName.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/mcrl2/Mcrl2Generator.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/AST.java
@@ -60,6 +64,7 @@
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/structures/Tree.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/FileHandler.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/mcrl2/Mcrl2Checker.java
+/home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/mcrl2/FunctionIfThenElse.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/compiler/TermOfTerms.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/generator/common/FunctionSubtractInteger.java
 /home/ton/eclipse-workspace/coherencecompiler/src/nl/tsmeele/grammar/FromRole.java

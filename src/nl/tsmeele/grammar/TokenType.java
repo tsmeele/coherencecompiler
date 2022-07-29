@@ -30,6 +30,9 @@ public enum TokenType {
 	TEXT_AND("and"),
 	TEXT_ATOMIC("atomic"),
 	TEXT_COHERENT("coherent"),
+	TEXT_IF("if"),
+	TEXT_THEN("then"),
+	TEXT_ELSE("else"),
 
 	
 	//INTEGERLITERAL("[-]{0,1}\\d+"),

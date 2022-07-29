@@ -19,7 +19,7 @@ import nl.tsmeele.grammar.Program;
 public class Main {
 	static final String PROGRAMNAME = "coherence";
 	static boolean DEBUG = false;
-	static boolean generateMcrl2 = false;
+	static boolean generateMcrl2 = true;
 	static boolean generatePlantuml = false;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
@@ -90,7 +90,8 @@ public class Main {
 				Mcrl2VariableSet mVars = code.getMcrl2().populateModel();
 				// perform 
 				// test mcrl2checker:
-				if (DEBUG) System.out.println(mVars);
+		//		if (DEBUG) 
+				System.out.println(mVars);
 //				out = System.out;
 //				in = System.in;
 				Mcrl2Checker checker = new Mcrl2Checker();
@@ -156,7 +157,6 @@ public class Main {
 		
 		List<String> files = commandLine.getArguments();
 		// redirect input to file, unless name is absent or "-" 
-		System.out.println("arguments =" + files + "=");
 		String inputFile = files.size() < 1 || files.get(0).equals("-") ? null : files.get(0);
 		in = StreamFactory.openInputFile(inputFile);	
 

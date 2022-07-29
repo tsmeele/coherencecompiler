@@ -68,7 +68,8 @@ public class Mcrl2 {
 		List<String> renderedFragments = new ArrayList<String>();
 		for (TargetCode f : fragments) {
 			String rendered = f.renderAsString();
-			if (rendered.length() == 0) {
+			if (rendered == null || rendered.length() == 0) {
+				// filter empty fragments
 				continue;
 			}
 			renderedFragments.add(f.renderAsString());
@@ -117,9 +118,9 @@ public class Mcrl2 {
 	}
 	
 	
+	
 	public Mcrl2VariableSet populateModel() {
 		Mcrl2VariableSet m = new Mcrl2VariableSet();
-System.err.println(this);
 		for (String role : roleMapper.keySet()) {
 			String mRole = roleMapper.get(role);
 			m.roles.add(mRole);
@@ -163,14 +164,12 @@ System.err.println(this);
 	private String mValue(String mRole) {
 		String mcrlValue = mRoleValue.get(mRole);
 		if (mcrlValue != null) {
-		//	System.err.println("reusing value " + mcrlValue + " for role " + mRole);
 			return mcrlValue;
 		}
 		// role does not yet have a value, we need to create a new one
 		mcrlValue = Mcrl2VariableSet.valuePrefix + Integer.toString(mSeqNo++); 
 		mValues.add(mcrlValue);
 		mRoleValue.put(mRole, mcrlValue);
-	//	System.err.println("reusing value " + mcrlValue + " for role " + mRole);
 		return mcrlValue;
 	}
 	

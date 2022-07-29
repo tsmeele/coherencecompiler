@@ -18,6 +18,7 @@ public abstract class CodeGenerator {
 		this.out = out;
 	}
 	
+	public abstract TargetCode createNoCode();
 	
 	public abstract StackableFunction createFunction(StackableFunctionType type);
 

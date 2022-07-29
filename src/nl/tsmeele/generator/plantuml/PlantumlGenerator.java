@@ -15,6 +15,7 @@ import nl.tsmeele.generator.common.FunctionRole;
 import nl.tsmeele.generator.common.FunctionStatementBlock;
 import nl.tsmeele.generator.common.FunctionSubtractInteger;
 import nl.tsmeele.generator.common.FunctionWithThreads;
+import nl.tsmeele.generator.common.StringTargetCode;
 import nl.tsmeele.grammar.StackableFunctionType;
 
 
@@ -60,6 +61,10 @@ public class PlantumlGenerator extends CodeGenerator {
 			throw new GeneratorException("Expected target code at end evaluation, found " + result.getValueType());
 		}
 		for (TargetCode tc : result.getCode()) {
+			if (tc.renderAsString() == null) {
+				// filter empty code fragments
+				continue;
+			}
 			out.println(tc.renderAsString());
 		}
 		out.println(FOOTER);
@@ -83,8 +88,14 @@ public class PlantumlGenerator extends CodeGenerator {
 		case ATOMIC_BLOCK: return new FunctionAtomicBlock();
 		case COHERENT: return new FunctionCoherent();
 		case PARTICIPANTS: return new FunctionParticipants();
+		case IFTHENELSE: return new FunctionIfThenElse();
 		}
 		return null;
+	}
+
+	@Override
+	public TargetCode createNoCode() {
+		return new StringTargetCode(null);
 	}
 
 	

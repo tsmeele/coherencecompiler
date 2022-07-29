@@ -13,6 +13,8 @@ public class FunctionStatementBlock extends StackableFunction {
 		int stackFrameSize = this.getStackFrameSize();
 		if (stackFrameSize == 0) {
 			// no target code produced by the statements in this block
+			// we ensure that a statement block always produces code, by inserting an empty fragment
+			code.push(new Value(code.createNoCode()));
 			return null;
 		}
 		// glue the code from the statements together

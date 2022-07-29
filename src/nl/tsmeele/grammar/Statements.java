@@ -18,6 +18,9 @@ public class Statements extends NonConsumingTerm {
 		Class[] communicationRule = {CommunicationStatement.class, Statements.class};
 		addRule(TokenType.TEXT_FROM, communicationRule);
 		
+		Class[] ifRule = {IfStatement.class, Statements.class};
+		addRule(TokenType.TEXT_IF, ifRule);
+		
 		// 'empty' statement:
 		Class[] emptyRule = {EmptyStatement.class, Statements.class};
 		addRule(TokenType.SEMICOLON, emptyRule);

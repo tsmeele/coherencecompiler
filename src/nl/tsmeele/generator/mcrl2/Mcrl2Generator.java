@@ -9,6 +9,7 @@ import nl.tsmeele.compiler.AST;
 import nl.tsmeele.compiler.CodeGenerator;
 import nl.tsmeele.compiler.GeneratorException;
 import nl.tsmeele.compiler.StackableFunction;
+import nl.tsmeele.compiler.TargetCode;
 import nl.tsmeele.compiler.Variable;
 import nl.tsmeele.generator.common.FunctionAddInteger;
 import nl.tsmeele.generator.common.FunctionAtomicStatement;
@@ -17,6 +18,7 @@ import nl.tsmeele.generator.common.FunctionRole;
 import nl.tsmeele.generator.common.FunctionStatementBlock;
 import nl.tsmeele.generator.common.FunctionSubtractInteger;
 import nl.tsmeele.generator.common.FunctionWithThreads;
+import nl.tsmeele.generator.common.StringTargetCode;
 import nl.tsmeele.grammar.StackableFunctionType;
 
 public class Mcrl2Generator extends CodeGenerator {
@@ -69,8 +71,15 @@ public class Mcrl2Generator extends CodeGenerator {
 		case COMMUNICATION: return new FunctionCommunication();
 		case ATOMIC_BLOCK: return new FunctionAtomicBlock();
 		case COHERENT: return new FunctionCoherent();
+		case IFTHENELSE: return new FunctionIfThenElse();
 		}
 		return null;
+	}
+
+
+	@Override
+	public TargetCode createNoCode() {
+		return new StringTargetCode(null);
 	}
 
 	

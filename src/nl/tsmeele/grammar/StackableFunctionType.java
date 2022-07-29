@@ -6,7 +6,7 @@ public enum StackableFunctionType {
 
 	
 	// "statements", these functions are expected to return a target code value
-	 COMMUNICATION, ATOMIC_BLOCK, ATOMIC, COHERENT, STATEMENT_BLOCK;
+	 COMMUNICATION, ATOMIC_BLOCK, ATOMIC, COHERENT, STATEMENT_BLOCK, IFTHENELSE;
 	
 	
 	
