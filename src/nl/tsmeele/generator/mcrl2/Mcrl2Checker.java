@@ -73,7 +73,6 @@ public class Mcrl2Checker {
 		File source2 = fh.createTempFile(template2.generateMcrl2Program());
 		File lts2 = File.createTempFile("lts", null);
 		source2lts(source2, lts2);
-		
 		ProcessBuilder pb = new ProcessBuilder(LTSCOMPARE, "-eweak-bisim", "--in1=lts", "--in2=lts", lts1.getAbsolutePath(), lts2.getAbsolutePath());
 		String output = cmd.execute(pb);
 		source1.delete();
@@ -110,7 +109,7 @@ public class Mcrl2Checker {
 			throw new GeneratorException("Model checking: Unable to generate lps file from mcrl2 source file");
 		}
 		// we use an lps tempfile as a workaround, since we have experienced input file errors when passing the lps via the pipe to lps2lts 
-		ProcessBuilder pb2 = new ProcessBuilder(LPS2LTS, "-q", lps.getAbsolutePath(), lts.getAbsolutePath());
+		ProcessBuilder pb2 = new ProcessBuilder(LPS2LTS, "-q", "--save-at-end", "--rewriter=jittyc", "--cached", lps.getAbsolutePath(), lts.getAbsolutePath());
 		output = cmd.execute(pb2);
 		lps.delete();
 		if (output == null || !output.equals("")) {

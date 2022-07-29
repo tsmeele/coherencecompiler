@@ -20,6 +20,7 @@ public class Main {
 	static final String PROGRAMNAME = "coherence";
 	static boolean DEBUG = false;
 	static boolean generateMcrl2 = false;
+	static boolean includeBisimulationTest = false;
 	static boolean generatePlantuml = false;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
@@ -30,8 +31,9 @@ public class Main {
 			entry("--debug","^-d$|^--debug$"),
 			entry("--help", "^-h$|^--help$"),
 			entry("--syntax","^-s$|^--syntax$"),
-			entry("--mcrl2", "^-m$"),
-			entry("--plantuml","^-p$")
+			entry("--mcrl2", "^-m$|^--mcrl2$"),
+			entry("--bisimtest", "^-b$|^--bisimtest$"),
+			entry("--plantuml","^-p$|^--plantuml$")
 			);
 
 
@@ -47,6 +49,7 @@ public class Main {
 			if (showSyntax) {
 				Term g = new Program();
 				out.println(g.toAllSyntax());
+				System.exit(0);
 			}
 			
 			// if appropriate, provide user with data entry instructions
@@ -96,8 +99,15 @@ public class Main {
 				// execute model checker tests
 				Mcrl2Checker checker = new Mcrl2Checker();
 				System.out.println("mCRL2 MODEL CHECKING RESULTS USING COHERENCE MODEL:\n");
-				System.out.println("Protocol is free of deadlocks? : " + checker.isDeadlockFree(mVars));
-				System.out.println("Protocol can be implemented?   : " + checker.isWeaklyBisimilar(mVars,mVarsLocal));
+				System.out.print("Protocol is free of deadlocks? : ");
+				System.out.println(checker.isDeadlockFree(mVars));
+				System.out.print("Protocol can be implemented?   : ");
+				if (includeBisimulationTest) {
+					System.out.print("(preparing/testing, may take long) ");
+					System.out.println(checker.isWeaklyBisimilar(mVars,mVarsLocal));
+				} else {
+					System.out.println("(test not included)");
+				}
 				// if required, test coherence
 				if (mVars.coherentRoleSets.size() > 0) {
 					// protocol includes coherence requirements
@@ -138,6 +148,7 @@ public class Main {
 		showUsage = showUsage || cmd.containsKey("--help");
 		generatePlantuml = generatePlantuml || cmd.containsKey("--plantuml");
 		generateMcrl2 = generateMcrl2 || cmd.containsKey("--mcrl2");
+		includeBisimulationTest = includeBisimulationTest || cmd.containsKey("--bisimtest");
 		
 		if (showUsage) {
 			System.out.println("Usage: " + PROGRAMNAME + " [options] inputfile outputfile\nValid options are:\n" + commandLine.getUsageText() + "\n");

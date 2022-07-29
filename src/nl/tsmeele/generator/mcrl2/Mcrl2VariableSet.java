@@ -140,8 +140,8 @@ public class Mcrl2VariableSet implements Cloneable {
 				pt = ProjectionType.LOCK;
 				consumed = m.group(0);
 				pt = consumed.equals("lock") ? ProjectionType.LOCK : ProjectionType.UNLOCK;
-				fromRole = m.group(1);
-				toRole = m.group(2);
+				fromRole = m.group(2);
+				toRole = m.group(3);
 			}
 			// process the global protocol piece to the local protocols
 			for (String role : local.roles) {
