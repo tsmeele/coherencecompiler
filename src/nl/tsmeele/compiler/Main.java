@@ -19,7 +19,7 @@ import nl.tsmeele.grammar.Program;
 public class Main {
 	static final String PROGRAMNAME = "coherence";
 	static boolean DEBUG = false;
-	static boolean generateMcrl2 = true;
+	static boolean generateMcrl2 = false;
 	static boolean generatePlantuml = false;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
@@ -86,16 +86,19 @@ public class Main {
 				Mcrl2Generator code = new Mcrl2Generator(out);
 				ast.evaluate(code);
 				if (DEBUG) System.err.println("Completed mCRL2 code generation.");
-				// create a model from the evaluated source code
+				
+				// create a model from the evaluated source code, also derive its local protocol projection
 				Mcrl2VariableSet mVars = code.getMcrl2().populateModel();
-				// perform 
-				// test mcrl2checker:
-		//		if (DEBUG) 
-				System.out.println(mVars);
-//				out = System.out;
-//				in = System.in;
+				if (DEBUG) System.err.println(mVars);
+				Mcrl2VariableSet mVarsLocal = mVars.project2localprotocols();
+				if (DEBUG) System.err.println("resulting local protocol vars is:\n" + mVarsLocal);
+				
+				// execute model checker tests
 				Mcrl2Checker checker = new Mcrl2Checker();
 				System.out.println("mCRL2 MODEL CHECKING RESULTS USING COHERENCE MODEL:\n");
+				System.out.println("Protocol is free of deadlocks? : " + checker.isDeadlockFree(mVars));
+				System.out.println("Protocol can be implemented?   : " + checker.isWeaklyBisimilar(mVars,mVarsLocal));
+				// if required, test coherence
 				if (mVars.coherentRoleSets.size() > 0) {
 					// protocol includes coherence requirements
 					int count = 1;
@@ -108,24 +111,10 @@ public class Main {
 						coherentTotal = coherentTotal && test;
 						count++;
 					}
-					System.out.println("\nProtocol protects coherence as required? :  " + coherentTotal);
-				}
-				System.out.println("Protocol is free of deadlocks? :  " + checker.isDeadlockFree(mVars));
-
-				
-//				Mcrl2VariableSet vars = new Mcrl2VariableSet();
-//				Mcrl2VariableSet varsGlobal = new Mcrl2VariableSet();
-//				Mcrl2VariableSet varsLocal = new Mcrl2VariableSet();
-//				vars.createCoherentTestset();
-//				varsGlobal.createTestset1();
-//				varsLocal.createTestset1NotBisim();
-//				System.out.println("vars created");
-//				System.out.println("Bisimulation? : " + checker.isWeaklyBisimilar(varsGlobal, varsLocal));
-				
-				
-				
-				
+					System.out.println("\nProtocol protects coherence? :  " + coherentTotal);
+				}		
 			}
+			
 			if (generatePlantuml) {
 				CodeGenerator code = new PlantumlGenerator(out);
 				ast.evaluate(code);

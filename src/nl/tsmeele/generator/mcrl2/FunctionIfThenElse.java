@@ -40,17 +40,3 @@ public class FunctionIfThenElse extends StackableFunction {
 	}
 }
 
-	
-//	private String render(LinkedList<TargetCode> code) {
-//		LinkedList<String> filtered = new LinkedList<String>();
-//		for (TargetCode fragment : code) {
-//			String text = fragment.renderAsString();
-//			if (text == null) {
-//				continue;
-//			}
-//			filtered.add(text);
-//		}
-//		// render as sequence of operations
-//		return String.join(".", filtered);
-//	}
-//}

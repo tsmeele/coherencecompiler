@@ -1,0 +1,8 @@
+protocol bisim(x,y) {
+if collection then {
+  from x to y updateCollection;
+} else {
+  from x to y updateObject;
+}
+
+}
