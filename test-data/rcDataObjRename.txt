@@ -1,0 +1,116 @@
+protocol rcDataObjRename(client,server,provider,database,consumer) {
+// server/api/src/rsDataObjRename.cpp
+
+from client to server rcDataObjRename;
+from server to provider rcDataObjRename;
+// rcDataObjRename --> rsDataObjRename --> rsDataObjRename_impl --> _rsDataObjRename
+// checks performed by provider:
+// - data object exists
+// - user has ACCESS_DELETE_OBJECT rights on data object 
+// - data object is not write-locked   (server/core/src/logical_locking.cpp)
+// - data object is not bundle type
+// if forceflag and destinationPath is in-use then unlink the destination data object, using rsDataObjUnlink 
+
+//  
+
+if sameName (sourceName, targetName)  then {
+  from provider to provider acPreProcForObjRename;
+  from provider to database unlinkTargetDataObject;
+  from provider to database chlRenameObject;
+}
+
+if targetCollectionNEQsourceCollection then {
+  from provider to provider acPreProcForObjRename;
+  chlMoveObject;
+}
+// syncCollPhyPath.....
+from provider to database commit;
+from provider to provider acPostProcForObjRename;
+
+
+
+  
+// ON PROVIDER: server/api/src _rsDataObjRename
+// split paths:  srcDataObjInp  -> srcColl + srcObj
+//               destDataObjInp -> destColl, destObj
+// check  that 
+//     - if opr = RENAME_DATA_OBJ: (call getDataObjInfo, isData) srcDataObjInp exists and require ACCESS_DELETE_OBJECT rights
+//     - if opr = RENAME_COLL:  (call isColl) srcDataObjInp exists
+//  if dataobj:
+//    check that object is not write-locked: ill::try_lock(source object) lock_type=write 
+//    if destDataObjInp exist: call rsDataObjUnlink(destDataObjInp) with force_flag ("do not send obj to trash")
+// 
+//    if srcDataObjInp is bundle type : throw error
+
+//    if srcObj != destObj  -> "rename basename of data object needed"
+//        apply rule "acPreProcForObjRename"
+//        chlRenameObject(srcId,destObj)               DEST NAME WORDT ALS STRING MEEGEGEVEN
+
+//    if srcColl != destColl  -> "rename collection (of the data object0"
+//        check that destination collection exists (call isColl)
+//        apply rule "acPreProcForObjRename"
+//        chlMoveobject (srcId,destId)                 DEST COLL WORDT ALS ID MEEGEGEVEN
+
+//    enforce phys path consistency:
+//    call syncCallPhyPath(destDataObjInp->objPath)
+//    success: chlCommit()
+//    error: chlRollback() 
+//    
+//    if success: 
+//       apply rule "acPostProcForObjRename"
+
+
+
+
+from server to client readAndProcApiReply;  // lib/core/src procApiRequest
+
+
+
+
+_rsDataObJRename
+  ...zie hierboven
+
+
+
+
+rsDataObjRename
+  rsDataObjRename_impl
+  + update mtime of source_parent_coll and destination_parent_coll
+      = call last_write_time() via rxModColl
+
+
+rsDataObjRename_impl
+  check same zone (source,dest)
+  check destination is not an existing special collection
+  check if src is in sepcial collection and not mounted collection then dest must also be in special collection
+    if so, then call specCollObjRename()
+    if source if mounted coll then call moveMountedCollObj()
+  otherwise:
+    _rsDataObjRename()
+
+
+
+rxModCol  ---> rsModCol ---> _rsModCol
+    performs:
+      apply rule "acPreProcForModifyCoillMeta"
+      chlModColl
+      apply rule "acPostProcForModifyCollMeta" 
+      commit (or rollback)
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+isColl(name, &id)  geeft aan of object bestaat en zo ja geeft diens id

@@ -5,9 +5,9 @@ protocol coherenceTest(agent1,x,y) {
    atomic update from agent1 protects x(a) {
       atomic update from agent1 protects y(b) {
          from agent1 to x(a) updateAttribute;
-        // from x(a) to agent1 ack;
+         from x(a) to agent1 ack;
          from agent1 to y(b) updateAttribute;
-        // from y(b) to agent1 ack;
+         from y(b) to agent1 ack;
       }
    }
 }
@@ -18,9 +18,9 @@ protocol coherenceTest(agent2,x,y) {
    atomic update from agent2 protects x(a) {
       atomic update from agent2 protects y(b) {
          from agent2 to x(a) updateAttribute;
-       //  from x(a) to agent2 ack;
+         from x(a) to agent2 ack;
          from agent2 to y(b) updateAttribute;
-       //  from y(b) to agent2 ack;
+         from y(b) to agent2 ack;
       }
    }
 }
