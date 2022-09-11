@@ -102,7 +102,8 @@ public class Mcrl2Template {
 	 * @return mcrl2 formatted init of a process
 	 */
 	private String insertCoherenceInit() {
-		return "Coherence(" + vars.coherentRoles[0] + "," + vars.coherentRoles[1] + ")"; 
+		return "Coherence(" + vars.coherentAttributes[0].getRole() + "," + vars.coherentAttributes[1].getRole() + "," +
+				vars.coherentAttributes[0].getAttr() + "," + vars.coherentAttributes[1].getAttr() + ")"; 
 	}
 	
 	private String insertActDone() {
@@ -134,108 +135,142 @@ public class Mcrl2Template {
 		return doneText + " -> done',";
 	}
 	
-	
-private String programText() {
-		return 
-			"sort RoleName = struct " + insertRoles() + "; \n"
-			+ "sort Value = struct " + insertValues() + ";\n"
-			+ "sort SyncStates = struct first|second|more;\n"
-			+ "\n"
-			+ "act  send,enqueue,trackSend,send',\n"
-			+ "     receive,dequeue,updateProp,trackReceive, receive' : RoleName # RoleName # Value;\n"
-			+ "     lastRole : RoleName;  \n"
-			+ "     lastEq : Bool;\n"
-			+ "     lock,lock',unlock,unlock':RoleName # RoleName;\n"
-			+ "     " + insertActDone() + "\n"
-			+ "\n"
-			+ "proc\n"
-			+ "\n"
-			+ "% Participants in our protocol have a process attribute 'prop' that is updated upon a receive\n"
-			+ "% As an extension, the property can be locked by another process (the lockholder).\n"
-			+ "% NB: requesting process blocks until lock is given\n"
-			+ "\n"
-			+ "  Role'(N:RoleName,prop:Value,locked:Bool,holder:RoleName) = \n"
-			+ "     sum from:RoleName, v:Value . ((N != from) -> updateProp(from,N,v).Role'(N,v,locked,holder)) +\n"
-			+ "     sum requester:RoleName . ( (locked && (requester==holder)) -> unlock(requester,N).  \n"
-			+ "               Role'(N,prop,false,requester)) +\n"
-			+ "     sum requester:RoleName . ( (!locked) -> lock(requester,N).  \n"
-			+ "               Role'(N,prop,true,requester)) ;\n"
-			+ "\n"
-			+ "\n"
-			+ "% Channels are implementation of asynchronous communication, maximum queue size 5 is arbitrary\n"
-			+ "\n"
-			+ "  Channel'(from,to:RoleName,data:List(Value),size:Int) =\n"
-			+ "     sum v:Value . ((size < 5) -> enqueue(from,to,v).Channel'(from,to,data <| v,succ(size)) ) +\n"
-			+ "     (size > 0)                -> dequeue(from,to,head(data)).Channel'(from,to,tail(data), pred(size) );\n"
-			+ "\n"
-			+ "\n"
-			+ "% Coherence' is a process that maintains the global coherence property 'last'\n"
-			+ "% In addition it acts as a probe, to report coherence status information (via actions):\n"
-			+ "%   lastRole(role)  : name of role that receives a new value for its prop\n"
-			+ "%   lastEq(boolean) : true if the data values of roles coh1 and coh2 are equal (after the receive action)\n"
-			+ "% Note that Coherence' is synchronized upon both send and receive. Further actions are blocked until report actions \n"
-			+ "% are done. This behavior ensures that the next transition after lastRole is always a lastEq action \n"
-			+ "\n"
-			+ "  Coherence'(coh1,coh2:RoleName,coh1val,coh2val:Value,last:RoleName) =\n"
-			+ "\n"
-			+ "     % case 1: coh1 role receives a new value\n"
-			+ "     sum from,to:RoleName,v:Value . \n"
-			+ "     (to == coh1) -> (trackReceive(from,to,v).   \n"
-			+ "               lastRole(to).lastEq(v==coh2val).     \n"
-			+ "               Coherence'(coh1,coh2,v,coh2val,to) ) +\n"
-			+ "\n"
-			+ "     % case 2: coh2 role receives a new value\n"
-			+ "     sum from,to:RoleName,v:Value . \n"
-			+ "     (to == coh2) -> (trackReceive(from,to,v).\n"
-			+ "               lastRole(to).lastEq(v==coh1val).\n"
-			+ "               Coherence'(coh1,coh2,coh1val,v,to) ) +\n"
-			+ "\n"
-			+ "     % case 3: some other role receives a new value\n"
-			+ "     sum from,to:RoleName,v:Value . \n"
-			+ "     ((to != coh1) && (to != coh2)) -> (trackReceive(from,to,v).\n"
-			+ "               lastRole(to).lastEq(coh1val==coh2val).\n"
-			+ "               Coherence'(coh1,coh2,coh1val,coh2val,to) ) +\n"
-			+ "\n"
-			+ "     % case send: just process and ignore\n"
-			+ "     sum from,to:RoleName,v:Value . (trackSend(from,to,v).\n"
-			+ "               Coherence'(coh1,coh2,coh1val,coh2val,last) ) ;\n"
-			+ "\n"
-			+ "\n"
-			+ "% Data transfer 'Cpq' is a basic construct of our global language:  Cpq --send--> Fpq --receive--> 1\n"
-			+ "% mcrl2 operators (sequential,option,parallel,recursion) are used to implement compositional constructs\n"
-			+ "% Our local language uses 'send' and 'receive' as its basic constructs. Tau is supported natively by mcrl2.\n"
-			+ "    \n"
-			+ "  C(from:RoleName,to:RoleName,v:Value) = send(from,to,v).receive(from,to,v); \n"
-			+ "\n"
-			+ "\n"
-			
-			+ "\n"
-			+ "\n"
-			+ insertProtocolDefinitions() + "\n" 
-			+ "\n"
-			+ "% shorthands added to beautify init process ;)\n"
-			+ "\n"
-			+ "  Role(N:RoleName) = Role'(N," + vars.initialValue + ",false," + vars.dormantRole + ");\n"
-			+ "  Chan(from,to:RoleName) = Channel'(from,to,[],0);\n"
-			+ "  Coherence(r1,r2:RoleName) = Coherence'(r1,r2," + vars.initialValue + "," + vars.initialValue + "," + vars.dormantRole + ");\n"
-			+ "\n"
-			+ "\n"
-			+ "init\n"
-			+ "\n"
-			+ "  allow(\n"
-			+ "     { send', receive', lastRole,lastEq, lock',unlock'"
-			+ insertAllowDone() + "},\n"
-			+ "     comm( \n"
-			+ "        {send|enqueue|trackSend -> send', receive|dequeue|updateProp|trackReceive -> receive',\n"
-			+ insertCommDone() + "\n"
-			+ "         lock|lock -> lock', unlock|unlock -> unlock'},\n"
-			+ "\n"
-			+ "        % these processes occur in every system:\n"
-			+ insertCoherenceInit() + " ||\n" 
-			+ insertRoleInits() + " ||\n"  
-			+ "joinedprotocol \n"
-			+ ") );";
-	}
+private String 	programText() {
+	    return 
+	    	"% Coherence model Global and Local Language\n" + 
+	     	"% 2022.08 TSM\n" + 
+	     	"%\n" + 
+	     	"sort RoleName = struct " + insertRoles() + "; \n" +
+			"sort Value = struct " + insertValues() + ";\n" +
+			"sort RequesterRole = RoleName;\n" + 
+			"sort FromRole = RoleName;\n" +
+			"sort Attribute = Nat;\n" + 
+			"sort AttrMap = Attribute -> Value;\n" + 
+			"sort LockStatusMap = Attribute -> Bool;\n" + 
+			"sort LockHolderMap = Attribute -> RoleName;\n" + 
+			"\n" + 
+			"act  send,enqueue,syncCoherence,send',\n" + 
+			"     receive,dequeue,updateProp,updateCoh,receive' : FromRole # RoleName # Attribute # Value;\n" + 
+			"     lastRoleAttr : RoleName # Attribute;  \n" + 
+			"     lastEq : Bool;\n" + 
+			"     lock,lock',unlock,unlock': RequesterRole # RoleName # Attribute;     \n" + 
+			"     " + insertActDone() + "\n" +
+			"\n" + 
+			"proc\n" + 
+			"\n" + 
+	     "% Roles carry process attributes that can be updated upon a receive\n" + 
+	     "\n" + 
+	     "  Role'(me:RoleName,props:AttrMap) = \n" + 
+	     "     sum from:RoleName, attr:Attribute, v:Value . (\n" + 
+	     "         (me != from) -> updateProp(from,me,attr,v).Role'(me,props[attr->v]) \n" + 
+	     "     );\n" + 
+	     "\n" + 
+	     "\n" + 
+	     "% Channels are implementation of asynchronous communication, maximum queue size 5 is arbitrary\n" + 
+	     "% The queue holds (attribute,value) pairs (stored in separate lists).\n" + 
+	     "\n" + 
+	     "  Channel'(from,to:RoleName,queueA:List(Attribute),queueV:List(Value),size:Int) =\n" + 
+	     "     sum attr:Attribute,v:Value . (\n" + 
+	     "         (size < 5) -> enqueue(from,to,attr,v).\n" + 
+	     "                          Channel'(from,to,queueA <| attr, queueV <| v, succ(size)) ) +\n" + 
+	     "         (size > 0) -> dequeue(from,to,head(queueA), head(queueV)).\n" + 
+	     "                          Channel'(from,to,tail(queueA),tail(queueV), pred(size) \n" + 
+	     "     );\n" + 
+	     "\n" + 
+	     "\n" + 
+	     "% Coherence' is a process that maintains the global coherence property 'last'\n" + 
+	     "% In addition it acts as a probe, to report coherence status information (via actions):\n" + 
+	     "%   lastRoleAttr(role,attribute)  : references the attribute that has received a new value\n" + 
+	     "%   lastEq(boolean) : true if the data values of the monitored attributes are equal (after a receive action)\n" + 
+	     "% Note that Coherence' is synchronized upon both send and receive. \n" + 
+	     "% Further actions are blocked until the actions of Coherence' are done. \n" + 
+	     "% This behavior ensures that the next transition after lastRoleAttr is always a lastEq action \n" + 
+	     "\n" + 
+	     "  Coherence'(role1,role2:RoleName,attr1,attr2:Attribute,value1,value2:Value,\n" + 
+	     "             lastRole:RoleName,lastAttr:Attribute) =    % lastX state included for monitoring during simulation\n" + 
+	     "\n" + 
+	     "     % receive case 1: the attribute of role1 receives a new value\n" + 
+	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
+	     "         (to == role1 && attr == attr1) -> updateCoh(from,to,attr,v).   \n" + 
+	     "                  lastRoleAttr(to,attr).lastEq(v==value2).     \n" + 
+	     "                  Coherence'(role1,role2,attr1,attr2,v,value2,to,attr) \n" + 
+	     "     ) +\n" + 
+	     "\n" + 
+	     "     % receive case 2: the attribute of role2 receives a new value\n" + 
+	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
+	     "         (to == role2 && attr == attr2) -> updateCoh(from,to,attr,v).\n" + 
+	     "                  lastRoleAttr(to,attr).lastEq(v==value1).\n" + 
+	     "                  Coherence'(role1,role2,attr1,attr2,value1,v,to,attr) \n" + 
+	     "     ) +\n" + 
+	     "\n" + 
+	     "     % receive case 3: some other role receives a new value\n" + 
+	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
+	     "         ( (to != role1 || attr != attr1) && (to != role2 || attr != attr2)\n" + 
+	     "         ) -> updateCoh(from,to,attr,v).\n" + 
+	     "                  lastRoleAttr(to,attr).lastEq(value1==value2).\n" + 
+	     "                  Coherence'(role1,role2,attr1,attr2,value1,value2,to,attr) \n" + 
+	     "     ) +\n" + 
+	     "\n" + 
+	     "     % send case: just synchronize on action and keep same state\n" + 
+	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
+	     "         syncCoherence(from,to,attr,v).\n" + 
+	     "               Coherence'(role1,role2,attr1,attr2,value1,value2,lastRole,lastAttr) \n" + 
+	     "     ) ;\n" + 
+	     "\n" + 
+	     "\n" + 
+	     "% Data transfer 'Cpq' is a basic construct of our global language:  Cpq --send--> Fpq --receive--> 1\n" + 
+	     "% mcrl2 operators (sequential,option,parallel,recursion) are used to implement compositional constructs\n" + 
+	     "% Our local language uses 'send' and 'receive' as its basic constructs. Tau is supported natively by mcrl2.\n" + 
+	     "    \n" + 
+	     "  C(from:RoleName,to:RoleName,attr:Attribute, v:Value) = \n" + 
+	     "       send(from,to,attr,v).receive(from,to,attr,v); \n" + 
+	     "\n" + 
+	     "% Our language includes lock/unlock operations on a role's attributes. \n" + 
+	     "% Implementation of the mutex could be in the Role process or in a separate process.\n" + 
+	     "% We model this as a separate LockManager process per role process.\n" + 
+	     "\n" + 
+	     "  LockManager(id:RoleName, lockStatusMap:LockStatusMap, lockHolderMap:LockHolderMap) =\n" + 
+	     "      sum requester:RoleName,attr:Attribute . (\n" + 
+	     "          (lockStatusMap(attr) && lockHolderMap(attr) == requester) -> unlock(requester,id,attr).\n" + 
+	     "               LockManager(id,lockStatusMap[attr->false],lockHolderMap[attr->id]) \n" + 
+	     "      ) +\n" + 
+	     "      sum requester:RoleName,attr:Attribute . (\n" + 
+	     "          (lockStatusMap(attr)==false) -> lock(requester,id,attr).\n" + 
+	     "               LockManager(id,lockStatusMap[attr->true],lockHolderMap[attr->requester])\n" + 
+	     "      );\n" + 
+	     "\n" + 
+	     "% ------------\n" + 
+	     insertProtocolDefinitions() + "\n" +
+	     "% ------------\n" + 
+	     "\n" + 
+	     "\n" + 
+	     "% shorthands added to beautify init process ;)\n" + 
+	     "\n" + 
+	     "  Role(role:RoleName) = Role'(role,lambda n:Attribute . " + 
+	     Mcrl2VariableSet.initialValue + ") || \n" + 
+	     "      LockManager(role,lambda n:Attribute . false, lambda n:Attribute . role);\n" + 
+	     "  Chan(from,to:RoleName) = Channel'(from,to,[],[],0);\n" + 
+	     "  Coherence(role1,role2:RoleName, attr1,attr2:Nat) = Coherence'(role1,role2,attr1,attr2," + 
+	            Mcrl2VariableSet.initialValue + "," + Mcrl2VariableSet.initialValue + "," + 
+	            Mcrl2VariableSet.dormantRole + ",0);\n" + 
+	     "\n" + 
+	     "\n" + 
+	     "init\n" + 
+	     "\n" + 
+	     "  allow(\n" + 
+	     "     { send', receive', lastRoleAttr,lastEq, lock',unlock'" + 
+	     insertAllowDone() + "},\n" +
+	     "     comm( \n" + 
+	     "        {send|enqueue|syncCoherence -> send', receive|dequeue|updateProp|updateCoh -> receive',\n" + 
+	     insertCommDone() + "\n" +
+	     "         lock|lock -> lock', unlock|unlock -> unlock'},\n" + 
+	     "\n" + 
+	     "        % these processes occur in every system:\n" + 
+	     insertCoherenceInit() + " ||\n" + 
+	     insertRoleInits() + " ||\n" + 
+	     "joinedprotocol \n" +
+	     ") );";	    
+}
 
 private String coherenceFormulaText() {
 	return "% Check if process attributes of role p and role q remain coherent \n"
@@ -252,20 +287,24 @@ private String coherenceFormulaText() {
 			+ " \n"
 			+ "( \n"
 			+ "   % part 1:\n"
-			+ "   [true*.lastRole("+vars.coherentRoles[0]+").lastEq(false)]   (                % 1a: AG(last(p) AND p != q  => ...... )\n"
-			+ "      [!lastRole("+vars.coherentRoles[1]+")*.lastRole("+vars.coherentRoles[0]+")] false   &&            % 1b: A(not last(p) U last(q) \n"
+			+ "   [true*.lastRoleAttr(" + cohVars(0) +").lastEq(false)]   (                % 1a: AG(last(p) AND p != q  => ...... )\n"
+			+ "      [!lastRoleAttr(" + cohVars(1) +")*.lastRoleAttr("+ cohVars(0) +")] false   &&            % 1b: A(not last(p) U last(q) \n"
 			+ "                                                        %     NB: remainder of Until clause \n"
 			+ "                                                        %         is checked as part of 1c \n"
-			+ "      [!lastRole("+vars.coherentRoles[1]+")*.lastRole("+vars.coherentRoles[1]+").lastEq(false)] false   % 1c: A(not last(q) U last(q) AND (p==q)) \n"
+			+ "      [!lastRoleAttr("+ cohVars(1) +")*.lastRoleAttr("+ cohVars(1) +").lastEq(false)] false   % 1c: A(not last(q) U last(q) AND (p==q)) \n"
 			+ "   )\n"
 			+ "&&\n"
 			+ "   % part 2:\n"
-			+ "   [true*.lastRole("+vars.coherentRoles[1]+").lastEq(false)]   (\n"
-			+ "          [!lastRole("+vars.coherentRoles[0]+")*.lastRole("+vars.coherentRoles[1]+")] false  &&\n"
-			+ "          [!lastRole("+vars.coherentRoles[0]+")*.lastRole("+vars.coherentRoles[0]+").lastEq(false)] false\n"
+			+ "   [true*.lastRoleAttr("+ cohVars(1) +").lastEq(false)]   (\n"
+			+ "          [!lastRoleAttr("+ cohVars(0) +")*.lastRoleAttr("+ cohVars(1) +")] false  &&\n"
+			+ "          [!lastRoleAttr("+ cohVars(0) +")*.lastRoleAttr("+ cohVars(0) +").lastEq(false)] false\n"
 			+ "   )\n"
 			+ ")\n"
 			+ "";
+}
+
+private String cohVars(int i) {
+	return vars.coherentAttributes[i].getRole() + "," + vars.coherentAttributes[i].getAttr();
 }
 
 

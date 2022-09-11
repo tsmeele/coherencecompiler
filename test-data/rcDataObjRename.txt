@@ -1,3 +1,5 @@
+// TODO:  THIS IS WORK IN PROGRESS, CURRENT CODE NO TESTED TO COMPILE
+
 protocol rcDataObjRename(client,server,provider,database,consumer) {
 // server/api/src/rsDataObjRename.cpp
 

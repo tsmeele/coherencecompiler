@@ -18,44 +18,30 @@ import nl.tsmeele.compiler.Variable;
  */
 public class Mcrl2 {
 	private int mSeqNo = 0; // sequence number to produce unique new mCRL2 roles/values 
+	private Mcrl2VariableSet vars = new Mcrl2VariableSet();
 	
-	// map from a compiler Role (+ associated IrodsAtttribute) to a rolename acceptable to mcrl2
+	// register of roles, map from a compiler role name to its mcrl2 equivalent name 
 	private Map<String,String> roleMapper = new HashMap<String,String>();
 	
-	// registration of all roles (with their current value) and all generated values
-	private Map<String,String> mRoleValue = new HashMap<String,String>();
-	private ArrayList<String> mValues = new ArrayList<String>();
-	
-	// sets of mcrl2 roles that need to remain coherent with each other
-	private CoherentRoles coherent = new CoherentRoles();
-
-	// protocol definitions
-	private Map<String,String> protocols = new HashMap<String,String>();
-	
+	private Map<String,ArrayList<String>> roleAttributes = new HashMap<String,ArrayList<String>>();
+	private Map<String,ArrayList<String>> roleAttrValues = new HashMap<String,ArrayList<String>>();
 	
 	
 	
 	public String toString() {
-		String text = "Variable Set content:\n" +
-				"Roles:\n" + printMap(roleMapper) +
-				"Values:\n" + mValues + "\n" +
-				"Protocols:\n" + printMap(protocols) +
-				"Coherent:\n" + printCoherent();
+		String text = "Mcrl2 content:\n" +
+				"Mapped roles:\n" + printMap(roleMapper) +
+				"Content of VariableSet:\n" + vars.toString();
 		return text;
 	}
 	
-	private String printCoherent() {
-		String text = "";
-		for (ArrayList<String> roles : coherent) {
-			text = text.concat(roles.toString() + "\n");
-		}
-		return text;
-	}
 	
 	private String printMap(Map<String,String> map) {
 		String text = "";
 		for (String key : map.keySet()) {
-			text = text.concat("  " + key + " -> " + map.get(key) + "\n");
+			String mRole = map.get(key);
+			text = text.concat("  " + key + " -> " + mRole + "\n");
+			text = text.concat("    attrs: " + roleAttributes.get(mRole).toString() + "\n");
 		}
 		return text;
 	}
@@ -66,9 +52,15 @@ public class Mcrl2 {
 		String protocolDefinition = renderCode(protocolCode);
 		// register the protocol body as a definition under a new protocol name
 		String mProtocol = Mcrl2VariableSet.protocolPrefix + Integer.toString(mSeqNo++);
-		protocols.put(mProtocol, protocolDefinition);
+		vars.protocols.put(mProtocol, protocolDefinition);
 		// reset the "values" of all roles so that the next protocol is independent of current protocol
-		mRoleValue = new HashMap<String,String>();
+		for (String role : vars.roles) {
+			ArrayList<String> attrs = roleAttrValues.get(role);
+			for (int i = 0; i < attrs.size(); i++) {
+				attrs.set(i, createMcrlValue());
+			}
+			roleAttrValues.put(role, attrs);
+		}
 	}
 	
 	public static String renderCode(Value protocolCode) {
@@ -88,107 +80,133 @@ public class Mcrl2 {
 	
 	
 	public void codeCoherent(ArrayList<Variable> roles) {
-		ArrayList<String> roleList = new ArrayList<String>();
+		AttributeList attrs = new AttributeList();
 		for (Variable role : roles) {
-			roleList.add(mRole(role));
+			attrs.add(mRole(role));
 		}
-		coherent.add(roleList);	
+		vars.coherentAttrSets.add(attrs);	
 	}
 	
 	public String codeCommunication(Variable fromRole, Variable toRole) {
-		String mFrom = mRole(fromRole);
-		String mTo = mRole(toRole);
-		if (mFrom.equals(mTo)) {
-			// we will not generate any code for internal communications
-			return "";
-		}
+		// lookup mCRL role/attribute
+		Attribute from = mRole(fromRole);
+		Attribute to = mRole(toRole);
+		
 		// process the communication:
 		//  1) update the toRole with the value sent by the fromRole
-		mRoleValue.put(mTo, mValue(mFrom));
+		String mValue = getMcrlValue(from);
+		setMcrlValue(to, mValue);
 		//  2) return targetCode for this operation
-		return "C(" + mFrom + "," + mTo + "," + mValue(mFrom) + ")";
+		if (from.equals(to)) {
+			// we will not generate any mCRL2 code for internal communications
+			return "";
+		}
+		return "C(" + from.getRole() + "," + to.getRole() + "," + to.getAttr() + "," + mValue + ")";
 	}
 	
 
 	
 	
 	public String codeLock(Variable requesterRole, Variable targetRole) {
-		String mFrom = mRole(requesterRole);
-		String mTo = mRole(targetRole);
-		return "lock(" + mFrom + "," + mTo + ")";
+		String mFrom = mRole(requesterRole).getRole();
+		Attribute target = mRole(targetRole);
+		String mTo = target.getRole();
+		String mAttr = target.getAttr();
+		return "lock(" + mFrom + "," + mTo + "," + mAttr + ")";
 	}
 
 
 	
 	public String codeUnlock(Variable requesterRole, Variable targetRole) {
-		String mFrom = mRole(requesterRole);
-		String mTo = mRole(targetRole);
-		return "unlock(" + mFrom + "," + mTo + ")";
+		String mFrom = mRole(requesterRole).getRole();
+		Attribute target = mRole(targetRole);
+		String mTo = target.getRole();
+		String mAttr = target.getAttr();
+		return "unlock(" + mFrom + "," + mTo + "," + mAttr + ")";
 	}
 	
 	
 	
 	public Mcrl2VariableSet populateModel() {
-		if (roleMapper.keySet().size() < 2) {
+		if (vars.roles.size() < 2) {
 			// we require at least two roles to populate a coherence program model
 			return null;
 		}
-		Mcrl2VariableSet m = new Mcrl2VariableSet();
-		for (String role : roleMapper.keySet()) {
-			String mRole = roleMapper.get(role);
-			m.registerRole(mRole);
-		}
-		for (String value : mValues) {
-			m.registerValue(value);
-		}
-		for (String protocolName : protocols.keySet()) {
-			m.registerProtocol(protocolName, protocols.get(protocolName));
-		}
-		m.registerCoherentRoleSets(coherent);
-		// initialize coherence with arbitrary roles so that model is 'complete'
-		m.setCoherent(m.roles.get(0), m.roles.get(1));
-		return m;
+		// initialize coherence with arbitrary role/attr so that model is 'complete'
+		Attribute attr1 = new Attribute(vars.roles.get(0), 0);
+		Attribute attr2 = new Attribute(vars.roles.get(1), 0);
+		vars.setCoherent(attr1, attr2);
+		return vars;
 	}
+
 	
+	//  ---------------- translate to mcrl2 name and register
+	
+	
+
 
 	
 	
-	
-	private String mRole(Variable role) {
-		String roleName = canonicalName(role);
-		String mcrlRole = roleMapper.get(roleName);
-		if (mcrlRole != null) {
-			// role already registered
-			return mcrlRole;
-		}
-		// register the role 
-		mcrlRole = Mcrl2VariableSet.rolePrefix + Integer.toString(mSeqNo++);
-		roleMapper.put(roleName, mcrlRole);
-		// register the initial value for the role
-		mRoleValue.put(mcrlRole,mValue(mcrlRole));
-		return mcrlRole;	
-	}
-	
-	private String mValue(String mRole) {
-		String mcrlValue = mRoleValue.get(mRole);
-		if (mcrlValue != null) {
-			return mcrlValue;
-		}
-		// role does not yet have a value, we need to create a new one
-		mcrlValue = Mcrl2VariableSet.valuePrefix + Integer.toString(mSeqNo++); 
-		mValues.add(mcrlValue);
-		mRoleValue.put(mRole, mcrlValue);
-		return mcrlValue;
-	}
-	
-	
-	private String canonicalName(Variable role) {
-		String name = role.getName();
+	private Attribute mRole(Variable role) {
+		String roleName = role.getName();
+		String attrName = "";  // default attribute name
 		Value irodsAttribute = role.getValue();
 		if (irodsAttribute != null) {
-			return name + "." + irodsAttribute.getVariable().getName();
+			attrName = irodsAttribute.getVariable().getName();
 		}
-		return name;
+		String mcrlRole = roleMapper.get(roleName);
+		if (mcrlRole == null) {
+			// register as new role
+			mcrlRole = createMcrlRole(roleName);
+		}
+		ArrayList<String> attrs = roleAttributes.get(mcrlRole);
+		int attrNo = 0;
+		if (attrs.contains(attrName)) {
+			// attribute already registered, just return what we have found
+			attrNo = attrs.indexOf(attrName);
+			return new Attribute(mcrlRole, attrNo);
+		}
+		// attribute is new, we need to map it to a new mCRL2 attribute for this role
+		attrNo = attrs.size(); // attributes are referenced by their index position
+		attrs.add(attrNo, attrName);
+		roleAttributes.put(mcrlRole, attrs);
+		// create and register an mCRL value for the new attribute
+		ArrayList<String> attrValues = roleAttrValues.get(mcrlRole);
+		attrValues.add(attrNo,createMcrlValue());
+		roleAttrValues.put(mcrlRole,attrValues);
+		return new Attribute(mcrlRole,attrNo);	
+	}
+	
+	
+	private String createMcrlRole(String roleName) {
+		String mRole = Mcrl2VariableSet.rolePrefix + Integer.toString(mSeqNo++);
+		// register as mCRL2 role
+		vars.roles.add(mRole);	
+		// facilitate mCRL2 role name lookup
+		roleMapper.put(roleName, mRole); 
+		// keep an index of role related attributes and their values
+		ArrayList<String> attrs = new ArrayList<String>();
+		roleAttributes.put(mRole, attrs);
+		ArrayList<String> attrValues = new ArrayList<String>();
+		roleAttrValues.put(mRole, attrValues); 
+		return mRole;
+	}
+	
+	private String createMcrlValue() {
+		String mValue = Mcrl2VariableSet.valuePrefix + Integer.toString(mSeqNo++);
+		vars.values.add(mValue);
+		return mValue;
+	}
+	
+	private String getMcrlValue(Attribute mRole) {
+		ArrayList<String> attrs = roleAttrValues.get(mRole.getRole());
+		return attrs.get(mRole.getAttrNo());
+	}
+	
+	private void setMcrlValue(Attribute mRole, String mValue) {
+		ArrayList<String> attrs = roleAttrValues.get(mRole.getRole());
+		attrs.set(mRole.getAttrNo(), mValue);
+		roleAttrValues.put(mRole.getRole(), attrs);
 	}
 
 

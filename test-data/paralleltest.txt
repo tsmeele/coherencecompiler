@@ -1,25 +1,25 @@
 parallel 
 
 protocol operationFilemodified (client, server, provider, consumer) {
- coherent server(obj1), provider(r1);
- coherent server(obj1), provider(r2);
-   atomic Operation from client protects server(obj1) { 
-      from client to server(obj1) rcDataObjPut;
-      atomic Put from server(obj1) protects provider(obj1) {
-         from server(obj1) to server(obj1) rsDataObjPut;
-         from server(obj1) to provider(obj1) rc_data_object_finalize;
-         from provider(obj1) to server(obj1) ack;
+ coherent server.obj1, provider.r1;
+ coherent server.obj1, provider.r2;
+   atomic Operation from client protects server.obj1 { 
+      from client to server.obj1 rcDataObjPut;
+      atomic Put from server.obj1 protects provider.obj1 {
+         from server.obj1 to server.obj1 rsDataObjPut;
+         from server.obj1 to provider.obj1 rc_data_object_finalize;
+         from provider.obj1 to server.obj1 ack;
       }
-      from server(obj1) to server(obj1) fileModified;
-      atomic Replication from server(obj1) protects provider(r1) {
-         from server(obj1) to server(r1) rsDataObjRepl;
-         from server(obj1) to provider(r1) rc_data_object_finalize;
-         from provider(r1) to server(obj1) ack;
+      from server.obj1 to server.obj1 fileModified;
+      atomic Replication from server.obj1 protects provider.r1 {
+         from server.obj1 to server.r1 rsDataObjRepl;
+         from server.obj1 to provider.r1 rc_data_object_finalize;
+         from provider.r1 to server.obj1 ack;
       }
-      atomic Replication from server(obj1) protects  provider(r2)  {
-         from server(obj1) to server(r2) rsDataObjRepl;
-         from server(obj1) to provider(r2) rc_data_object_finalize;
-         from provider(r2) to server(obj1) ack;
+      atomic Replication from server.obj1 protects  provider.r2  {
+         from server.obj1 to server.r2 rsDataObjRepl;
+         from server.obj1 to provider.r2 rc_data_object_finalize;
+         from provider.r2 to server.obj1 ack;
       }
    }
 }

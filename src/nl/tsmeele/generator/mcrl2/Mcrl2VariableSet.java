@@ -26,22 +26,23 @@ public class Mcrl2VariableSet implements Cloneable {
 	// the set of variables, consider to use the "register" methods to add members
 	public List<String> values = new ArrayList<String>();
 	public List<String> roles = new ArrayList<String>();
-	public String[] coherentRoles = new String[2];
+	public Attribute[] coherentAttributes = new Attribute[2];
 	public Map<String, String> protocols = new HashMap<String, String>();
 
 	public boolean addSynchronizedTerminationAction = false;
-	public CoherentRoles coherentRoleSets = new CoherentRoles();
+	public CoherentAttributes coherentAttrSets = new CoherentAttributes();
 
 	// variables internal to this class
-	private Iterator<String[]> cohIt = null;
+	private Iterator<Attribute[]> cohIt = null;
 
-	private enum ProjectionType {
+	// projection global -> local protocols
+	private enum OperationType {
 		OTHER, COMM, LOCK, UNLOCK
 	};
 
 	public String toString() {
-		String text = "Roles: " + roles + "\n" + "Values: " + values + "\n" + "coherent roles: " + coherentRoles[0]
-				+ " " + coherentRoles[1] + "\n" + printMap(protocols) + "\nCoherent sets: " + printCoherence();
+		String text = "Roles: " + roles + "\n" + "Values: " + values + "\n" + "coherent roles: " + coherentAttributes[0]
+				+ " " + coherentAttributes[1] + "\n" + printMap(protocols) + "\nCoherent sets: " + printCoherence();
 		return text;
 	}
 
@@ -53,29 +54,29 @@ public class Mcrl2VariableSet implements Cloneable {
 		for (String role : roles) {
 			copy.registerRole(role);
 		}
-		copy.setCoherent(coherentRoles[0], coherentRoles[1]);
+		copy.setCoherent(coherentAttributes[0], coherentAttributes[1]);
 		for (String protocolName : protocols.keySet()) {
 			copy.protocols.put(protocolName, protocols.get(protocolName));
 		}
-		copy.coherentRoleSets = coherentRoleSets.clone();
+		copy.coherentAttrSets = coherentAttrSets.clone();
 		copy.addSynchronizedTerminationAction = this.addSynchronizedTerminationAction;
 		return copy;
 	}
 
 	public void initializeCoherenceVariations() {
-		cohIt = coherentRoleSets.iterateRoles();
+		cohIt = coherentAttrSets.iterateAttributes();
 	}
 
 	public boolean renderCoherenceVariation() {
 		if (!cohIt.hasNext()) {
 			return false;
 		}
-		coherentRoles = cohIt.next();
+		coherentAttributes = cohIt.next();
 		return true;
 	}
 
-	public void registerCoherentRoleSets(CoherentRoles coherentRoleSets) {
-		this.coherentRoleSets = coherentRoleSets;
+	public void registerCoherentRoleSets(CoherentAttributes coherentAttrSets) {
+		this.coherentAttrSets = coherentAttrSets;
 	}
 
 	public void registerProtocol(String protocolName, String definition) {
@@ -96,11 +97,11 @@ public class Mcrl2VariableSet implements Cloneable {
 		}
 	}
 
-	public void setCoherent(String role1, String role2) {
-		registerRole(role1);
-		registerRole(role2);
-		coherentRoles[0] = role1;
-		coherentRoles[1] = role2;
+	public void setCoherent(Attribute attr1, Attribute attr2) {
+		registerRole(attr1.getRole());
+		registerRole(attr2.getRole());
+		coherentAttributes[0] = attr1;
+		coherentAttributes[1] = attr2;
 	}
 
 	public Mcrl2VariableSet project2localprotocols() {
@@ -114,34 +115,45 @@ public class Mcrl2VariableSet implements Cloneable {
 
 	private void projectOneProtocol2Local(Mcrl2VariableSet local, String globalName, String globalDef) {
 		// patterns to match the operations
-		Pattern pComm = Pattern.compile("^C[(]([A-Za-z0-9]+)[,]([A-Za-z0-9]+)[,]([A-Za-z0-9]+)[)]");
-		Pattern pLocks = Pattern.compile("^(lock|unlock)[(]([A-Za-z0-9]+),([A-Za-z0-9]+)[)]");
+		// TODO: cater for attribute ref in operations
+		Pattern pComm = Pattern.compile("^C[(]" +
+				"([A-Za-z0-9]+)[,]" +	// g1 = from role
+				"([A-Za-z0-9]+)[,]" +	// g2 = to role
+				"([0-9]+)[,]" +			// g3 = to attribute
+				"([A-Za-z0-9]+)[)]");	// g4 = value
+		Pattern pLocks = Pattern.compile("^(lock|unlock)[(]" +	// g1 = operation
+				"([A-Za-z0-9]+)[,]" +	// g2 = from role (requester)
+				"([A-Za-z0-9]+)[,]" +	// g3 = to role
+				"([0-9]+)[)]");			// g4 = to attribute
 		while (globalDef.length() > 0) {
 			// default action is to copy one character of the global protocol to the local
 			// protocols
-			ProjectionType pt = ProjectionType.OTHER;
+			OperationType pt = OperationType.OTHER;
 			String consumed = globalDef.substring(0, 1);
 			String fromRole = "";
 			String toRole = "";
+			String toAttr = "";
 			String value = "";
 			// if we find an operation, then we process the operation in one go
 			Matcher m = pComm.matcher(globalDef);
 			if (m.find()) {
 				// communication operation
-				pt = ProjectionType.COMM;
+				pt = OperationType.COMM;
 				consumed = m.group(0);
 				fromRole = m.group(1);
 				toRole = m.group(2);
-				value = m.group(3);
+				toAttr = m.group(3);
+				value = m.group(4);
 			}
 			m = pLocks.matcher(globalDef);
 			if (m.find()) {
 				// (un)lock operation
-				pt = ProjectionType.LOCK;
 				consumed = m.group(0);
-				pt = consumed.equals("lock") ? ProjectionType.LOCK : ProjectionType.UNLOCK;
+				pt = consumed.startsWith("lock") ? OperationType.LOCK : OperationType.UNLOCK;
 				fromRole = m.group(2);
 				toRole = m.group(3);
+				toAttr = m.group(4);
+				value = null;
 			}
 			// process the global protocol piece to the local protocols
 			for (String role : local.roles) {
@@ -156,7 +168,7 @@ public class Mcrl2VariableSet implements Cloneable {
 				case LOCK:
 				case UNLOCK: {
 					local.protocols.put(localName,
-							localDefinition + projectOperation(role, pt, fromRole, toRole, value));
+							localDefinition + projectOperation(role, pt, fromRole, toRole, toAttr, value));
 					break;
 				}
 				}
@@ -165,27 +177,34 @@ public class Mcrl2VariableSet implements Cloneable {
 		}
 	}
 
-	private String projectOperation(String role, ProjectionType pt, String fromRole, String toRole, String value) {
+	private String projectOperation(String role, OperationType pt, String fromRole, 
+			String toRole, String toAttr, String value) {
 		if (role.equals(fromRole)) {
 			switch (pt) {
 			case COMM:
-				return "send(" + fromRole + "," + toRole + "," + value + ")";
-			case LOCK:
-				return "lock(" + fromRole + "," + toRole + ")";
-			case UNLOCK:
+				return "send(" + fromRole + "," + toRole + "," + toAttr + ","  + value + ")";
+//			case LOCK:
+//				return "lock(" + fromRole + "," + toRole + "," + toAttr + ")";
+//			case UNLOCK:
+//			default:
+//				return "unlock(" + fromRole + "," + toRole + "," + toAttr + ")";
 			default:
-				return "unlock(" + fromRole + "," + toRole + ")";
+				return "tau";
 			}
 		}
 		if (role.equals(toRole)) {
 			switch (pt) {
 			case COMM:
-				return "receive(" + fromRole + "," + toRole + "," + value + ")";
+				return "receive(" + fromRole + "," + toRole + "," + toAttr + "," + value + ")";
+//			case LOCK:
+//				return "lock(" + fromRole + "," + toRole + "," + toAttr + ")";
+//			case UNLOCK:
+//			default:
+//				return "unlock(" + fromRole + "," + toRole + "," + toAttr + ")";
 			case LOCK:
-				return "lock(" + fromRole + "," + toRole + ")";
 			case UNLOCK:
 			default:
-				return "unlock(" + fromRole + "," + toRole + ")";
+				return "tau";
 			}
 		}
 		// other role
@@ -202,8 +221,8 @@ public class Mcrl2VariableSet implements Cloneable {
 
 	private String printCoherence() {
 		String text = "";
-		for (ArrayList<String> roleSet : coherentRoleSets) {
-			text = text.concat(roleSet.toString() + "\n");
+		for (ArrayList<Attribute> attrSet : coherentAttrSets) {
+			text = text.concat(attrSet.toString() + "\n");
 		}
 		return text;
 	}

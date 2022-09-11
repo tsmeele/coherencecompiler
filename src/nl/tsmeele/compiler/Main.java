@@ -18,10 +18,10 @@ import nl.tsmeele.grammar.Program;
 
 public class Main {
 	static final String PROGRAMNAME = "coherence";
-	static boolean DEBUG = false;
+	static boolean DEBUG = true;
 	static boolean generateMcrl2 = false;
 	static boolean includeBisimulationTest = false;
-	static boolean generatePlantuml = false;
+	static boolean generatePlantuml = true;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
 	static InputStream in = null;
@@ -92,7 +92,8 @@ public class Main {
 				
 				// create a model from the evaluated source code, also derive its local protocol projection
 				Mcrl2VariableSet mVars = code.getMcrl2().populateModel();
-				if (DEBUG) System.err.println(mVars);
+				if (DEBUG) System.err.println(code.getMcrl2().toString());
+				//if (DEBUG) System.err.println(mVars);
 				Mcrl2VariableSet mVarsLocal = mVars.project2localprotocols();
 				if (DEBUG) System.err.println("resulting local protocol vars is:\n" + mVarsLocal);
 				
@@ -109,7 +110,7 @@ public class Main {
 					System.out.println("(test not included)");
 				}
 				// if required, test coherence
-				if (mVars.coherentRoleSets.size() > 0) {
+				if (mVars.coherentAttrSets.size() > 0) {
 					// protocol includes coherence requirements
 					int count = 1;
 					mVars.initializeCoherenceVariations();

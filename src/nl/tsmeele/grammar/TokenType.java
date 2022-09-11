@@ -15,6 +15,7 @@ public enum TokenType {
 	CURLYCLOSE("[}]"),
 	SEMICOLON("[;]"),
 	COMMA("[,]"),
+	DOT("[.]"),
 	EQUALS("[=]"),
 	WHITESPACE("[\\s]+"),
 	TEXT_LET("let"),

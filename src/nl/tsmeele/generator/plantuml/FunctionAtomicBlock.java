@@ -29,7 +29,7 @@ public class FunctionAtomicBlock extends StackableFunction {
 		// produce lock operation and add it to the stack
 		String roleAndAttribute = protectsRole.getName();
 		if (protectsRole.getValue() != null && protectsRole.getValue().isVariable()) {
-			roleAndAttribute = roleAndAttribute.concat("(" + protectsRole.getValue().getVariable().getName() + ")");
+			roleAndAttribute = roleAndAttribute.concat("." + protectsRole.getValue().getVariable().getName() );
 		}
 		TargetCode atomicLock = new StringTargetCode("group " + operation.getName() + " [critical section " + roleAndAttribute + " ]");
 		code.push(new Value(atomicLock));

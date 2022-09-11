@@ -1,8 +1,8 @@
 protocol bisim(x,y) {
 if collection then {
-  from x to y(a) updateCollection;
+  from x to y.a updateCollection;
 } else {
-  from x to y(b) updateObject;
+  from x to y.b updateObject;
 }
 
 }
