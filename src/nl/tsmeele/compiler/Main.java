@@ -19,9 +19,9 @@ import nl.tsmeele.grammar.Program;
 public class Main {
 	static final String PROGRAMNAME = "coherence";
 	static boolean DEBUG = true;
-	static boolean generateMcrl2 = false;
-	static boolean includeBisimulationTest = false;
-	static boolean generatePlantuml = true;
+	static boolean generateMcrl2 = true;
+	static boolean includeBisimulationTest = true;
+	static boolean generatePlantuml = false;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
 	static InputStream in = null;

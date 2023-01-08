@@ -141,7 +141,7 @@ private String 	programText() {
 	     	"% 2022.08 TSM\n" + 
 	     	"%\n" + 
 	     	"sort RoleName = struct " + insertRoles() + "; \n" +
-			"sort Value = struct " + insertValues() + ";\n" +
+			"sort Value = struct Lock|Unlock|Ack|" + insertValues() + ";\n" +
 			"sort RequesterRole = RoleName;\n" + 
 			"sort FromRole = RoleName;\n" +
 			"sort Attribute = Nat;\n" + 
@@ -153,17 +153,36 @@ private String 	programText() {
 			"     receive,dequeue,updateProp,updateCoh,receive' : FromRole # RoleName # Attribute # Value;\n" + 
 			"     lastRoleAttr : RoleName # Attribute;  \n" + 
 			"     lastEq : Bool;\n" + 
-			"     lock,lock',unlock,unlock': RequesterRole # RoleName # Attribute;     \n" + 
 			"     " + insertActDone() + "\n" +
 			"\n" + 
 			"proc\n" + 
 			"\n" + 
-	     "% Roles carry process attributes that can be updated upon a receive\n" + 
-	     "\n" + 
-	     "  Role'(me:RoleName,props:AttrMap) = \n" + 
-	     "     sum from:RoleName, attr:Attribute, v:Value . (\n" + 
-	     "         (me != from) -> updateProp(from,me,attr,v).Role'(me,props[attr->v]) \n" + 
-	     "     );\n" + 
+			"% Roles carry process attributes that can be updated upon a receive\n" + 
+
+			"  Role'(me:RoleName,props:AttrMap, lockStatusMap:LockStatusMap, lockHolderMap:LockHolderMap) = \n" + 
+			"     sum from:RoleName, attr:Attribute, v:Value . (\n" + 
+			"         (me != from) -> ( \n" +
+			"\n" +                       
+			"                        % unlock request for unlocked attr or for locked attr where role is the lock holder\n" +
+			"              (v == Unlock && ( (lockStatusMap(attr) && lockHolderMap(attr) == from) || \n" +
+			"                                 lockStatusMap(attr) == false) ) -> \n" +
+			"                         updateProp(from,me,attr,v).Role'(me,props,lockStatusMap[attr->false],lockHolderMap) + \n" +
+            "\n" +
+			"                        % lock request and attribute is not yet locked or role is the lock holder (and locks again)\n" +
+			"              (v == Lock && (lockStatusMap(attr)==false || (lockStatusMap(attr) && lockHolderMap(attr)==from) ) ) ->\n" +
+			"                         updateProp(from,me,attr,v).Role'(me,props,lockStatusMap[attr->true],lockHolderMap[attr->from]) +\n" + 
+            "\n" +
+			"                        % acknowledge message (in response to lock/unlock request)\n" +
+			"              (v == Ack) ->\n" +
+			"                         updateProp(from,me,attr,v).Role'(me,props,lockStatusMap,lockHolderMap) +\n" +
+			"              (v != Ack && v != Unlock && v != Lock) -> ( \n" +
+            "\n" +
+			"                        % attribute data update for unlocked attr or attr where role is lock holder\n" +
+			"                   ( (lockStatusMap(attr) && lockHolderMap(attr) == from) || lockStatusMap(attr) == false ) ->\n" +  
+			"                         updateProp(from,me,attr,v).Role'(me,props[attr->v],lockStatusMap,lockHolderMap) \n" +
+			"              )\n" +
+			"         ) \n" +
+			"     );\n" +
 	     "\n" + 
 	     "\n" + 
 	     "% Channels are implementation of asynchronous communication, maximum queue size 5 is arbitrary\n" + 
@@ -188,35 +207,39 @@ private String 	programText() {
 	     "\n" + 
 	     "  Coherence'(role1,role2:RoleName,attr1,attr2:Attribute,value1,value2:Value,\n" + 
 	     "             lastRole:RoleName,lastAttr:Attribute) =    % lastX state included for monitoring during simulation\n" + 
-	     "\n" + 
-	     "     % receive case 1: the attribute of role1 receives a new value\n" + 
-	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
-	     "         (to == role1 && attr == attr1) -> updateCoh(from,to,attr,v).   \n" + 
-	     "                  lastRoleAttr(to,attr).lastEq(v==value2).     \n" + 
-	     "                  Coherence'(role1,role2,attr1,attr2,v,value2,to,attr) \n" + 
-	     "     ) +\n" + 
-	     "\n" + 
-	     "     % receive case 2: the attribute of role2 receives a new value\n" + 
-	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
-	     "         (to == role2 && attr == attr2) -> updateCoh(from,to,attr,v).\n" + 
-	     "                  lastRoleAttr(to,attr).lastEq(v==value1).\n" + 
-	     "                  Coherence'(role1,role2,attr1,attr2,value1,v,to,attr) \n" + 
-	     "     ) +\n" + 
-	     "\n" + 
-	     "     % receive case 3: some other role receives a new value\n" + 
-	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
-	     "         ( (to != role1 || attr != attr1) && (to != role2 || attr != attr2)\n" + 
-	     "         ) -> updateCoh(from,to,attr,v).\n" + 
-	     "                  lastRoleAttr(to,attr).lastEq(value1==value2).\n" + 
-	     "                  Coherence'(role1,role2,attr1,attr2,value1,value2,to,attr) \n" + 
-	     "     ) +\n" + 
-	     "\n" + 
-	     "     % send case: just synchronize on action and keep same state\n" + 
-	     "     sum from,to:RoleName,attr:Attribute,v:Value . ( \n" + 
-	     "         syncCoherence(from,to,attr,v).\n" + 
-	     "               Coherence'(role1,role2,attr1,attr2,value1,value2,lastRole,lastAttr) \n" + 
-	     "     ) ;\n" + 
-	     "\n" + 
+	     "\n" +  
+		 "sum from,to:RoleName,attr:Attribute,v:Value . (\n" + 
+		 "\n" +
+		 "            % send case: just synchronize on action and keep same state\n" +
+		 "   syncCoherence(from,to,attr,v).\n" +
+		 "         Coherence'(role1,role2,attr1,attr2,value1,value2,lastRole,lastAttr) +\n" +	
+		 "\n" +
+		 "            % special receive cases: received value is related to an (un)lock request\n" +
+		 "           % we synchronize and keep same state\n" +
+		 "  (v == Lock || v == Unlock || v == Ack) -> updateCoh(from,to,attr,v) .\n" + 
+		 "           Coherence'(role1,role2,attr1,attr2,value1,value2,lastRole,lastAttr) +\n" +
+		 "  (v != Lock && v != Unlock && v != Ack) -> (\n" +
+		 "\n" +
+		 "    % all other receive cases, we need to update coherence state information:\n" +
+		 "\n" +
+		 "            % receive case 1: the attribute of role1 receives a new value\n" + 
+		 "   (to == role1 && attr == attr1) -> updateCoh(from,to,attr,v).   \n" +
+		 "            lastRoleAttr(to,attr).lastEq(v==value2).     \n" +
+		 "            Coherence'(role1,role2,attr1,attr2,v,value2,to,attr) +\n" + 
+		 "\n" +
+		 "             % receive case 2: the attribute of role2 receives a new value\n" +
+		 "    (to == role2 && attr == attr2) -> updateCoh(from,to,attr,v).\n" +
+		 "             lastRoleAttr(to,attr).lastEq(v==value1).\n" +
+		 "             Coherence'(role1,role2,attr1,attr2,value1,v,to,attr) +\n" +
+		 "\n" +
+		 "             % receive case 3: some other role receives a new value\n" +
+		 "    ( (to != role1 || attr != attr1) && (to != role2 || attr != attr2) ) -> updateCoh(from,to,attr,v).\n" +
+		 "             lastRoleAttr(to,attr).lastEq(value1==value2).\n" +
+		 "             Coherence'(role1,role2,attr1,attr2,value1,value2,to,attr)\n" + 
+		 "\n" +
+		 ") );\n" +
+
+
 	     "\n" + 
 	     "% Data transfer 'Cpq' is a basic construct of our global language:  Cpq --send--> Fpq --receive--> 1\n" + 
 	     "% mcrl2 operators (sequential,option,parallel,recursion) are used to implement compositional constructs\n" + 
@@ -225,19 +248,15 @@ private String 	programText() {
 	     "  C(from:RoleName,to:RoleName,attr:Attribute, v:Value) = \n" + 
 	     "       send(from,to,attr,v).receive(from,to,attr,v); \n" + 
 	     "\n" + 
-	     "% Our language includes lock/unlock operations on a role's attributes. \n" + 
-	     "% Implementation of the mutex could be in the Role process or in a separate process.\n" + 
-	     "% We model this as a separate LockManager process per role process.\n" + 
-	     "\n" + 
-	     "  LockManager(id:RoleName, lockStatusMap:LockStatusMap, lockHolderMap:LockHolderMap) =\n" + 
-	     "      sum requester:RoleName,attr:Attribute . (\n" + 
-	     "          (lockStatusMap(attr) && lockHolderMap(attr) == requester) -> unlock(requester,id,attr).\n" + 
-	     "               LockManager(id,lockStatusMap[attr->false],lockHolderMap[attr->id]) \n" + 
-	     "      ) +\n" + 
-	     "      sum requester:RoleName,attr:Attribute . (\n" + 
-	     "          (lockStatusMap(attr)==false) -> lock(requester,id,attr).\n" + 
-	     "               LockManager(id,lockStatusMap[attr->true],lockHolderMap[attr->requester])\n" + 
-	     "      );\n" + 
+	     
+		 "% lock and unlock communications consist of a request and a response (acknowledge)\n" +  
+		 "% NB: the ack msg is targeted at a role and includes a dummy attribute '0'\n" +
+		 "  lock(from:RoleName,to:RoleName,attr:Attribute) =\n" +
+		 "       C(from,to,attr,Lock).C(to,from,0, Ack);\n" +
+		 "\n" +
+		 "  unlock(from:RoleName,to:RoleName,attr:Attribute) =\n" + 
+		 "       C(from,to,attr,Unlock).C(to,from,0,Ack);\n" +
+
 	     "\n" + 
 	     "% ------------\n" + 
 	     insertProtocolDefinitions() + "\n" +
@@ -245,10 +264,9 @@ private String 	programText() {
 	     "\n" + 
 	     "\n" + 
 	     "% shorthands added to beautify init process ;)\n" + 
-	     "\n" + 
+	     "\n" + 	     
 	     "  Role(role:RoleName) = Role'(role,lambda n:Attribute . " + 
-	     Mcrl2VariableSet.initialValue + ") || \n" + 
-	     "      LockManager(role,lambda n:Attribute . false, lambda n:Attribute . role);\n" + 
+	     Mcrl2VariableSet.initialValue + ", lambda n:Attribute . false, lambda n:Attribute . role);\n" + 
 	     "  Chan(from,to:RoleName) = Channel'(from,to,[],[],0);\n" + 
 	     "  Coherence(role1,role2:RoleName, attr1,attr2:Nat) = Coherence'(role1,role2,attr1,attr2," + 
 	            Mcrl2VariableSet.initialValue + "," + Mcrl2VariableSet.initialValue + "," + 
@@ -258,12 +276,11 @@ private String 	programText() {
 	     "init\n" + 
 	     "\n" + 
 	     "  allow(\n" + 
-	     "     { send', receive', lastRoleAttr,lastEq, lock',unlock'" + 
+	     "     { send', receive', lastRoleAttr,lastEq" + 
 	     insertAllowDone() + "},\n" +
-	     "     comm( \n" + 
-	     "        {send|enqueue|syncCoherence -> send', receive|dequeue|updateProp|updateCoh -> receive',\n" + 
+	     "     comm( {\n" + 
 	     insertCommDone() + "\n" +
-	     "         lock|lock -> lock', unlock|unlock -> unlock'},\n" + 
+	     "        send|enqueue|syncCoherence -> send', receive|dequeue|updateProp|updateCoh -> receive'},\n" + 
 	     "\n" + 
 	     "        % these processes occur in every system:\n" + 
 	     insertCoherenceInit() + " ||\n" + 

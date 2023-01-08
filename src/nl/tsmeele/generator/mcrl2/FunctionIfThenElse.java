@@ -28,13 +28,13 @@ public class FunctionIfThenElse extends StackableFunction {
 		Variable irodsOperation = code.popVariable();
 		
 		// we build the choice target code using the then-clause results as a foundation/collector
-		//     "(" <then> ")" "+" "(" <else> ")"
-		String total = "(" + Mcrl2.renderCode(thenResult) + ")+(";
+		//    "("  "(" <then> ")" "+" "(" <else> ")"  ")"
+		String total = "((" + Mcrl2.renderCode(thenResult) + ")+(";
 		String elseText = "tau";
 		if (elseResult != null) {
 			elseText = Mcrl2.renderCode(elseResult); 
 		}
-		total = total.concat(elseText + ")");
+		total = total.concat(elseText + "))");
 		Value totalCode = new Value(new StringTargetCode(total));
 		return totalCode;
 	}

@@ -182,12 +182,13 @@ public class Mcrl2VariableSet implements Cloneable {
 		if (role.equals(fromRole)) {
 			switch (pt) {
 			case COMM:
-				return "send(" + fromRole + "," + toRole + "," + toAttr + ","  + value + ")";
-//			case LOCK:
-//				return "lock(" + fromRole + "," + toRole + "," + toAttr + ")";
-//			case UNLOCK:
-//			default:
-//				return "unlock(" + fromRole + "," + toRole + "," + toAttr + ")";
+				return "send(" + fromRole + "," + toRole + "," + toAttr + "," + value + ")";
+			case LOCK:
+				return "send(" + fromRole + "," + toRole + "," + toAttr + "," + "Lock" + ")" +
+			           ".receive(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
+			case UNLOCK:
+				return "send(" + fromRole + "," + toRole + "," + toAttr + "," + "Unlock" + ")" +
+		           ".receive(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
 			default:
 				return "tau";
 			}
@@ -196,13 +197,12 @@ public class Mcrl2VariableSet implements Cloneable {
 			switch (pt) {
 			case COMM:
 				return "receive(" + fromRole + "," + toRole + "," + toAttr + "," + value + ")";
-//			case LOCK:
-//				return "lock(" + fromRole + "," + toRole + "," + toAttr + ")";
-//			case UNLOCK:
-//			default:
-//				return "unlock(" + fromRole + "," + toRole + "," + toAttr + ")";
 			case LOCK:
+				return "receive(" + fromRole + "," + toRole + "," + toAttr + "," + "Lock" + ")" +
+			           ".send(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
 			case UNLOCK:
+				return "receive(" + fromRole + "," + toRole + "," + toAttr + "," + "Unlock" + ")" +
+		           ".send(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
 			default:
 				return "tau";
 			}

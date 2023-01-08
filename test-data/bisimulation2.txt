@@ -1,0 +1,14 @@
+// this is a bisimulation, because the unlock (atomic block end) can only
+// take place after all atomic operations have completed
+// (x,a will first receive the ack message)
+protocol bisim(x,y) {
+atomic upd from x.a protects y.a {
+  if collection then {
+    from x.a to y.a updateCollection;
+    from y.a to x.a ack;
+    } else {
+    from x.a to y.b updateObject;
+    from y.b to x.a ack;
+    }
+}
+}

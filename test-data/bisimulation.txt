@@ -1,8 +1,10 @@
+// this shuld be a bisimulation
+
 protocol bisim(x,y) {
 if collection then {
   from x to y.a updateCollection;
 } else {
   from x to y.b updateObject;
 }
-
+from y to x.a upd;
 }

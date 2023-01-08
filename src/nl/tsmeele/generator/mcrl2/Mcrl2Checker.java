@@ -43,8 +43,8 @@ public class Mcrl2Checker {
 		File source = fh.createTempFile(template.generateMcrl2Program());
 		File formula = fh.createTempFile(template.generateCoherenceFormula());
 		boolean result = hasProperty(source, formula);
-	//	source.delete();
-	//	formula.delete();
+		source.delete();
+		formula.delete();
 		return result;
 	}
 	

@@ -1,0 +1,12 @@
+// this is NOT a bisimulation, because the unlock (atomic block end) can
+// take place before all atomic operations have completed
+// (from x.a to y.a might not yet have been received by y.a)
+protocol bisim(x,y) {
+atomic upd from x.a protects y.a {
+  if collection then {
+    from x.a to y.a updateCollection;
+    } else {
+    from x.a to y.b updateObject;
+    }
+}
+}
