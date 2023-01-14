@@ -146,6 +146,7 @@ private String 	programText() {
 			"sort FromRole = RoleName;\n" +
 			"sort Attribute = Nat;\n" + 
 			"sort AttrMap = Attribute -> Value;\n" + 
+			"sort Condition = struct EQ|NEQ;\n" +
 			"sort LockStatusMap = Attribute -> Bool;\n" + 
 			"sort LockHolderMap = Attribute -> RoleName;\n" + 
 			"\n" + 
@@ -153,6 +154,7 @@ private String 	programText() {
 			"     receive,dequeue,updateProp,updateCoh,receive' : FromRole # RoleName # Attribute # Value;\n" + 
 			"     lastRoleAttr : RoleName # Attribute;  \n" + 
 			"     lastEq : Bool;\n" + 
+		    "     test, testProp, syncCoherenceOnTest,test' : Condition # RoleName # Attribute # Attribute;\n" +
 			"     " + insertActDone() + "\n" +
 			"\n" + 
 			"proc\n" + 
@@ -182,7 +184,14 @@ private String 	programText() {
 			"                         updateProp(from,me,attr,v).Role'(me,props[attr->v],lockStatusMap,lockHolderMap) \n" +
 			"              )\n" +
 			"         ) \n" +
-			"     );\n" +
+			"     ) +\n" +
+		    " sum attrA,attrB:Attribute . ( \n" +
+		    "     (attrA != attrB && props(attrA) != zero && props(attrB) != zero) -> \n" +
+		    "          (props(attrA) == props(attrB)) -> (testProp(EQ,me,attrA,attrB). \n" +
+		    "                     Role'(me,props,lockStatusMap,lockHolderMap)) \n" +
+		   	"	       <> (testProp(NEQ,me,attrA,attrB). \n" +
+		    "                     Role'(me,props,lockStatusMap,lockHolderMap)) \n" +
+		    "    ); \n" +
 	     "\n" + 
 	     "\n" + 
 	     "% Channels are implementation of asynchronous communication, maximum queue size 5 is arbitrary\n" + 
@@ -208,6 +217,11 @@ private String 	programText() {
 	     "  Coherence'(role1,role2:RoleName,attr1,attr2:Attribute,value1,value2:Value,\n" + 
 	     "             lastRole:RoleName,lastAttr:Attribute) =    % lastX state included for monitoring during simulation\n" + 
 	     "\n" +  
+         "            % test case: just synchronize on action and keep same state \n" +
+         "sum condition:Condition,from:RoleName,attrA,attrB:Attribute . ( \n" +
+         "   syncCoherenceOnTest(condition,from,attrA,attrB).\n" +
+         "         Coherence'(role1,role2,attr1,attr2,value1,value2,lastRole,lastAttr)\n" +
+         ") + \n" +
 		 "sum from,to:RoleName,attr:Attribute,v:Value . (\n" + 
 		 "\n" +
 		 "            % send case: just synchronize on action and keep same state\n" +
@@ -276,14 +290,16 @@ private String 	programText() {
 	     "init\n" + 
 	     "\n" + 
 	     "  allow(\n" + 
-	     "     { send', receive', lastRoleAttr,lastEq" + 
+	     "     { send', receive', test', lastRoleAttr,lastEq" + 
 	     insertAllowDone() + "},\n" +
 	     "     comm( {\n" + 
 	     insertCommDone() + "\n" +
+	     "        test|testProp|syncCoherenceOnTest -> test',\n" +
 	     "        send|enqueue|syncCoherence -> send', receive|dequeue|updateProp|updateCoh -> receive'},\n" + 
 	     "\n" + 
-	     "        % these processes occur in every system:\n" + 
+	     "        % processes that occur in every system:\n" + 
 	     insertCoherenceInit() + " ||\n" + 
+	     "        % processes that are protocol-specific:\n" +
 	     insertRoleInits() + " ||\n" + 
 	     "joinedprotocol \n" +
 	     ") );";	    

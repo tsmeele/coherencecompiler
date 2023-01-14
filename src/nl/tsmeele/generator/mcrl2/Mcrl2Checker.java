@@ -25,6 +25,7 @@ public class Mcrl2Checker {
 	private final String LTSCOMPARE = "ltscompare";
 	private static FileHandler fh = new FileHandler();
 	private static CommandShell cmd = new CommandShell();
+	private boolean keepSourceFiles = false;
 	
 	
 	public void checkMcrl2Installed() throws IOException {
@@ -37,14 +38,20 @@ public class Mcrl2Checker {
 		}
 	}
 	
+	public void setKeepSourceFiles(boolean b) {
+		keepSourceFiles = b;
+	}
+	
 	public boolean isCoherent(Mcrl2VariableSet vars) throws IOException {
 		vars.addSynchronizedTerminationAction = false;
 		Mcrl2Template template = new Mcrl2Template(vars);
 		File source = fh.createTempFile(template.generateMcrl2Program());
 		File formula = fh.createTempFile(template.generateCoherenceFormula());
 		boolean result = hasProperty(source, formula);
-		source.delete();
-		formula.delete();
+		if (!keepSourceFiles) {
+			source.delete();
+			formula.delete();
+		}
 		return result;
 	}
 	
@@ -56,8 +63,10 @@ public class Mcrl2Checker {
 		File source = fh.createTempFile(template.generateMcrl2Program());
 		File formula = fh.createTempFile(template.generateTerminatesAlwaysFormula());
 		boolean result = hasProperty(source, formula);
-		source.delete();
-		formula.delete();
+		if (!keepSourceFiles) {
+			source.delete();
+			formula.delete();
+		}
 		return result;
 	}
 	
@@ -75,9 +84,11 @@ public class Mcrl2Checker {
 		source2lts(source2, lts2);
 		ProcessBuilder pb = new ProcessBuilder(LTSCOMPARE, "-eweak-bisim", "--in1=lts", "--in2=lts", lts1.getAbsolutePath(), lts2.getAbsolutePath());
 		String output = cmd.execute(pb);
-		source1.delete();
+		if (!keepSourceFiles) {
+			source1.delete();
+			source2.delete();
+		}
 		lts1.delete();
-		source2.delete();
 		lts2.delete();
 		boolean result = output.contains("true");
 		if (!result && !output.contains("false")) {
@@ -115,9 +126,6 @@ public class Mcrl2Checker {
 		if (output == null || !output.equals("")) {
 			throw new GeneratorException("Model checking: Unable to generate lts file from lps input file");
 		}
-	}
-
-
-	
+	}	
 
 }

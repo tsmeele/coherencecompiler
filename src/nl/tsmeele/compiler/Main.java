@@ -18,10 +18,10 @@ import nl.tsmeele.grammar.Program;
 
 public class Main {
 	static final String PROGRAMNAME = "coherence";
-	static boolean DEBUG = false;
-	static boolean generateMcrl2 = false;
+	static boolean DEBUG = true;
+	static boolean generateMcrl2 = true;
 	static boolean includeBisimulationTest = false;
-	static boolean generatePlantuml = true;
+	static boolean generatePlantuml = false;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
 	static InputStream in = null;
@@ -99,6 +99,7 @@ public class Main {
 				
 				// execute model checker tests
 				Mcrl2Checker checker = new Mcrl2Checker();
+				if (DEBUG) checker.setKeepSourceFiles(true);
 				System.out.println("mCRL2 MODEL CHECKING RESULTS USING COHERENCE MODEL:\n");
 				System.out.print("Protocol is free of deadlocks? : ");
 				System.out.println(checker.isDeadlockFree(mVars));
