@@ -13,6 +13,7 @@ import nl.tsmeele.compiler.TargetCode;
 import nl.tsmeele.compiler.Variable;
 import nl.tsmeele.generator.common.FunctionAddInteger;
 import nl.tsmeele.generator.common.FunctionAtomicStatement;
+import nl.tsmeele.generator.common.FunctionAttributesIsEqual;
 import nl.tsmeele.generator.common.FunctionParticipants;
 import nl.tsmeele.generator.common.FunctionRole;
 import nl.tsmeele.generator.common.FunctionStatementBlock;
@@ -64,6 +65,7 @@ public class Mcrl2Generator extends CodeGenerator {
 		case ROLE: return new FunctionRole();
 		case STATEMENT_BLOCK: return new FunctionStatementBlock();
 		case PARTICIPANTS: return new FunctionParticipants();
+		case ATTRIBUTES_IS_EQUAL: return new FunctionAttributesIsEqual();
 
 		
 		// mCRL2 specific functions
@@ -72,6 +74,7 @@ public class Mcrl2Generator extends CodeGenerator {
 		case ATOMIC_BLOCK: return new FunctionAtomicBlock();
 		case COHERENT: return new FunctionCoherent();
 		case IFTHENELSE: return new FunctionIfThenElse();
+		case ROLE_CONDITION: return new FunctionRoleCondition();
 		}
 		return null;
 	}

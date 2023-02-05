@@ -7,6 +7,8 @@ import java.util.LinkedList;
  * Value can hold a single value of any type. It will attempt to translate the
  * value to a requested target type whenever its data is queried.
  * 
+ * String literals "true" and "false" are projected to integers 1 and 0.
+ * 
  * @author Ton Smeele
  *
  */
@@ -81,6 +83,12 @@ public class Value extends Stackable {
 		case VARIABLE:
 		case TERM: 		return 0;
 		case STRING:
+		}
+		if (text.equalsIgnoreCase("true")) {
+			return 1;
+		}
+		if (text.equalsIgnoreCase("false")) {
+			return 0;
 		}
 		try {
 			this.number = Integer.valueOf(text);

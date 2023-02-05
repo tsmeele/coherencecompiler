@@ -7,7 +7,7 @@ public class Role extends TermOfTerms {
 	@SuppressWarnings("rawtypes")
 	public Role() {
 		super();
-		Class[] roleRule = { RoleName.class, DottedIrodsAttribute.class };
+		Class[] roleRule = { RoleName.class, DottedAttribute.class };
 		addDefaultRule(roleRule);
 		addFunction(StackableFunctionType.ROLE);
 	}

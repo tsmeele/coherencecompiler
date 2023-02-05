@@ -10,6 +10,7 @@ import nl.tsmeele.compiler.TargetCode;
 import nl.tsmeele.compiler.Value;
 import nl.tsmeele.generator.common.FunctionAddInteger;
 import nl.tsmeele.generator.common.FunctionAtomicStatement;
+import nl.tsmeele.generator.common.FunctionAttributesIsEqual;
 import nl.tsmeele.generator.common.FunctionParticipants;
 import nl.tsmeele.generator.common.FunctionRole;
 import nl.tsmeele.generator.common.FunctionStatementBlock;
@@ -81,6 +82,7 @@ public class PlantumlGenerator extends CodeGenerator {
 		case ATOMIC: return new FunctionAtomicStatement();
 		case ROLE: return new FunctionRole();
 		case STATEMENT_BLOCK: return new FunctionStatementBlock();
+		case ATTRIBUTES_IS_EQUAL: return new FunctionAttributesIsEqual();
 
 		// PlantUML specific functions
 		case PROTOCOL: return new FunctionProtocol();
@@ -89,6 +91,7 @@ public class PlantumlGenerator extends CodeGenerator {
 		case COHERENT: return new FunctionCoherent();
 		case PARTICIPANTS: return new FunctionParticipants();
 		case IFTHENELSE: return new FunctionIfThenElse();
+		case ROLE_CONDITION: return new FunctionRoleCondition();
 		}
 		return null;
 	}

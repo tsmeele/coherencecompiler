@@ -9,10 +9,12 @@ public class IntegerOperand extends NonConsumingTerm {
 		super();
 		Class[] bracketedRule = { IntegerOperandBracketed.class};
 		Class[] minusRule = {IntegerOperandMinus.class};
-		Class[] literalRule = {IntegerOperandLiteral.class};
+		Class[] integerLiteralRule = {IntegerOperandLiteral.class};
+		Class[] booleanLiteralRule = {BooleanOperandLiteral.class};
 		addRule(TokenType.BRACKETOPEN, bracketedRule);
 		addRule(TokenType.MINUS, minusRule);
-		addRule(TokenType.INTEGERLITERAL, literalRule);
+		addRule(TokenType.INTEGERLITERAL, integerLiteralRule);
+		addRule(TokenType.BOOLEANLITERAL, booleanLiteralRule);
 		// TODO: rule3:  <variable>
 		
 	}

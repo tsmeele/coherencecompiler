@@ -18,10 +18,10 @@ import nl.tsmeele.grammar.Program;
 
 public class Main {
 	static final String PROGRAMNAME = "coherence";
-	static boolean DEBUG = true;
-	static boolean generateMcrl2 = true;
+	static boolean DEBUG = false;
+	static boolean generateMcrl2 = false;
 	static boolean includeBisimulationTest = false;
-	static boolean generatePlantuml = false;
+	static boolean generatePlantuml = true;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
 	static InputStream in = null;
@@ -136,6 +136,7 @@ public class Main {
 		catch (Exception e) {
 			System.err.println(e.getMessage());
 			System.err.println("Compilation aborted in " + phase + " phase due to errors");
+			if (DEBUG) e.printStackTrace();
 			System.exit(1);
 		}	
 		

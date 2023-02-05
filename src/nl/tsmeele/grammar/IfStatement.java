@@ -7,7 +7,7 @@ public class IfStatement extends Term {
 	@SuppressWarnings("rawtypes")
 	public IfStatement() {
 		super();
-		Class[] rule = {IrodsOperation.class, ThenClause.class, ElseClause.class};
+		Class[] rule = {IfClause.class, ThenClause.class, ElseClause.class};
 		addRule(TokenType.TEXT_IF, rule);
 		//closingTokenType = TokenType.SEMICOLON;
 		addFunction(StackableFunctionType.IFTHENELSE);

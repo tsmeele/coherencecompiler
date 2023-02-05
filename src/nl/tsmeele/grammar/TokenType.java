@@ -16,6 +16,7 @@ public enum TokenType {
 	SEMICOLON("[;]"),
 	COMMA("[,]"),
 	DOT("[.]"),
+	ISEQUAL("[=]{2,2}"),
 	EQUALS("[=]"),
 	WHITESPACE("[\\s]+"),
 	TEXT_LET("let"),
@@ -34,7 +35,8 @@ public enum TokenType {
 	TEXT_IF("if"),
 	TEXT_THEN("then"),
 	TEXT_ELSE("else"),
-
+	
+	BOOLEANLITERAL("false|true"),
 	
 	//INTEGERLITERAL("[-]{0,1}\\d+"),
 	INTEGERLITERAL("\\d+"),
@@ -49,7 +51,7 @@ public enum TokenType {
 	        "[0-3]?[0-7]{1,2}|" +
 			"u[0-9a-fA-F]{4}))*'"),
 	DQSTRINGLITERAL(
-	        // double-quoted string (almost similar to above)
+	        // double-quoted string (concept similar to above)
 	        "\"([^\\\\\"]+|" +
 	        "[\"]{2,2}|" +			
 			"\\\\([btnfr\"'\\\\]|" +
@@ -77,7 +79,8 @@ public enum TokenType {
 	public static boolean isValue(TokenType tt) {
 		return tt == INTEGERLITERAL ||
 				tt == SQSTRINGLITERAL ||
-				tt == DQSTRINGLITERAL;
+				tt == DQSTRINGLITERAL ||
+				tt == BOOLEANLITERAL;
 	}
 	
 	public static boolean isStrippable(TokenType tt) {

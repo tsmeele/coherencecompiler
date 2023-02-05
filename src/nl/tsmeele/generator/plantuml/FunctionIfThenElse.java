@@ -22,12 +22,12 @@ public class FunctionIfThenElse extends StackableFunction {
 			elseResult = code.popValue(); 
 		}
 		Value thenResult = code.popValue();
-		Variable irodsOperation = code.popVariable();
+		String condition = code.popValue().getString();
 		
 		// we build the choice target code using the then-clause results as a foundation/collector
-		thenResult.addFirst(new StringTargetCode("alt " + irodsOperation.getName()));
+		thenResult.addFirst(new StringTargetCode("alt " + condition));
 		if (elseResult != null) {
-			thenResult.addLast(new StringTargetCode("else not " + irodsOperation.getName()));
+			thenResult.addLast(new StringTargetCode("else not " + condition));
 			thenResult.addLast(elseResult.getCode());
 		}
 		thenResult.addLast(new StringTargetCode("end"));

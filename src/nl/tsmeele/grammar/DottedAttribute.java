@@ -2,12 +2,12 @@ package nl.tsmeele.grammar;
 
 import nl.tsmeele.compiler.OptionalTerm;
 
-public class DottedIrodsAttribute extends OptionalTerm {
+public class DottedAttribute extends OptionalTerm {
 
 	@SuppressWarnings("rawtypes")
-	public DottedIrodsAttribute() {
+	public DottedAttribute() {
 		super();
-		Class[] rule = {IrodsAttribute.class};
+		Class[] rule = {Attribute.class};
 		addRule(TokenType.DOT, rule);
 	}
 

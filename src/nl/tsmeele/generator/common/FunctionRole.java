@@ -6,13 +6,10 @@ import nl.tsmeele.compiler.Stackable;
 import nl.tsmeele.compiler.StackableFunction;
 import nl.tsmeele.compiler.Value;
 import nl.tsmeele.compiler.Variable;
-import nl.tsmeele.grammar.IrodsAttribute;
+import nl.tsmeele.grammar.Attribute;
 
 /**
- * Processes an iRODS message.  Source on stack is expected: <operation> [ '(' <object> ')' ]
- * The function assumes that the operation is a Variable. If an <object> has been specified,
- * then it will assign the <object> name as a value to the <operation> Variable.
- * Its purpose is to present a uniform message format to parent terms to ease further processing.
+ * if an optional attribute is present then add this to the role
  * 
  * @author ton
  *

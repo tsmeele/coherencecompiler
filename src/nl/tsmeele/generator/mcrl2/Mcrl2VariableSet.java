@@ -37,7 +37,7 @@ public class Mcrl2VariableSet implements Cloneable {
 
 	// projection global -> local protocols
 	private enum OperationType {
-		OTHER, COMM, LOCK, UNLOCK
+		OTHER, COMM, LOCK, UNLOCK, TEST
 	};
 
 	public String toString() {
@@ -125,15 +125,20 @@ public class Mcrl2VariableSet implements Cloneable {
 				"([A-Za-z0-9]+)[,]" +	// g2 = from role (requester)
 				"([A-Za-z0-9]+)[,]" +	// g3 = to role
 				"([0-9]+)[)]");			// g4 = to attribute
+		Pattern pTest = Pattern.compile("^test[(]" +
+				"([A-Z]+)[,]" +			// g1 = condition e.g. EQ,NEQ
+				"([A-Za-z0-9]+)[,]" +	// g2 = role
+				"([0-9]+)[,]" +			// g3 = attribute1
+				"([0-9]+)[)]");			// g4 = attribute2
 		while (globalDef.length() > 0) {
 			// default action is to copy one character of the global protocol to the local
 			// protocols
+			Map<String,String> parms = new HashMap<String,String>();
 			OperationType pt = OperationType.OTHER;
-			String consumed = globalDef.substring(0, 1);
 			String fromRole = "";
 			String toRole = "";
-			String toAttr = "";
-			String value = "";
+			String consumed = globalDef.substring(0, 1);
+
 			// if we find an operation, then we process the operation in one go
 			Matcher m = pComm.matcher(globalDef);
 			if (m.find()) {
@@ -142,8 +147,8 @@ public class Mcrl2VariableSet implements Cloneable {
 				consumed = m.group(0);
 				fromRole = m.group(1);
 				toRole = m.group(2);
-				toAttr = m.group(3);
-				value = m.group(4);
+				parms.put("toAttr", m.group(3));
+				parms.put("value", m.group(4));
 			}
 			m = pLocks.matcher(globalDef);
 			if (m.find()) {
@@ -152,8 +157,16 @@ public class Mcrl2VariableSet implements Cloneable {
 				pt = consumed.startsWith("lock") ? OperationType.LOCK : OperationType.UNLOCK;
 				fromRole = m.group(2);
 				toRole = m.group(3);
-				toAttr = m.group(4);
-				value = null;
+				parms.put("toAttr", m.group(4));
+			}
+			m = pTest.matcher(globalDef);
+			if (m.find()) {
+				consumed = m.group(0);
+				pt = OperationType.TEST;
+				parms.put("condition", m.group(1));
+				fromRole = m.group(2);
+				parms.put("attr1", m.group(3));
+				parms.put("attr2", m.group(4));
 			}
 			// process the global protocol piece to the local protocols
 			for (String role : local.roles) {
@@ -166,29 +179,35 @@ public class Mcrl2VariableSet implements Cloneable {
 				}
 				case COMM:
 				case LOCK:
-				case UNLOCK: {
+				case UNLOCK:
+				case TEST: {
 					local.protocols.put(localName,
-							localDefinition + projectOperation(role, pt, fromRole, toRole, toAttr, value));
+							localDefinition + projectOperation(role, pt, fromRole, toRole, parms));
 					break;
 				}
+				//TODO: add case TEST
 				}
 			}
 			globalDef = globalDef.substring(consumed.length());
 		}
 	}
 
-	private String projectOperation(String role, OperationType pt, String fromRole, 
-			String toRole, String toAttr, String value) {
+	private String projectOperation(String role, OperationType pt, 
+			String fromRole, String toRole, Map<String,String> parms) {
 		if (role.equals(fromRole)) {
 			switch (pt) {
 			case COMM:
-				return "send(" + fromRole + "," + toRole + "," + toAttr + "," + value + ")";
+				return "send(" + fromRole + "," + toRole + "," + 
+					parms.get("toAttr") + "," + parms.get("value") + ")";
 			case LOCK:
-				return "send(" + fromRole + "," + toRole + "," + toAttr + "," + "Lock" + ")" +
+				return "send(" + fromRole + "," + toRole + "," + parms.get("toAttr") + "," + "Lock" + ")" +
 			           ".receive(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
 			case UNLOCK:
-				return "send(" + fromRole + "," + toRole + "," + toAttr + "," + "Unlock" + ")" +
+				return "send(" + fromRole + "," + toRole + "," + parms.get("toAttr") + "," + "Unlock" + ")" +
 		           ".receive(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
+			case TEST:
+				return "test(" + parms.get("condition") + "," + fromRole + "," +
+						parms.get("attr1") + "," + parms.get("attr2") + ")";
 			default:
 				return "tau";
 			}
@@ -196,13 +215,15 @@ public class Mcrl2VariableSet implements Cloneable {
 		if (role.equals(toRole)) {
 			switch (pt) {
 			case COMM:
-				return "receive(" + fromRole + "," + toRole + "," + toAttr + "," + value + ")";
+				return "receive(" + fromRole + "," + toRole + "," + 
+					parms.get("toAttr") + "," + parms.get("value") + ")";
 			case LOCK:
-				return "receive(" + fromRole + "," + toRole + "," + toAttr + "," + "Lock" + ")" +
+				return "receive(" + fromRole + "," + toRole + "," + parms.get("toAttr") + "," + "Lock" + ")" +
 			           ".send(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
 			case UNLOCK:
-				return "receive(" + fromRole + "," + toRole + "," + toAttr + "," + "Unlock" + ")" +
+				return "receive(" + fromRole + "," + toRole + "," + parms.get("toAttr") + "," + "Unlock" + ")" +
 		           ".send(" + toRole + "," + fromRole + "," + "0" + "," + "Ack" + ")";
+			case TEST:
 			default:
 				return "tau";
 			}

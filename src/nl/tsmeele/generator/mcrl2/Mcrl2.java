@@ -125,6 +125,39 @@ public class Mcrl2 {
 		return "unlock(" + mFrom + "," + mTo + "," + mAttr + ")";
 	}
 	
+	public String codeTestTrue(Variable role, Value condition, Variable attribute1, Variable attribute2) {
+		return codeTest(role, condition, true, attribute1, attribute2);
+	}
+	
+	public String codeTestFalse(Variable role, Value condition, Variable attribute1, Variable attribute2) {
+		return codeTest(role, condition, false, attribute1, attribute2);
+	}
+	
+	private String codeTest(Variable role,Value condition, boolean test,
+			Variable attribute1, Variable attribute2) {
+		// to be able to lookup the mcrl2 name of an attribute, we need their canonical name
+		Variable cAttribute1 = new Variable(role.getNameSpace(),role.getName());
+		cAttribute1.setValue(new Value(attribute1));
+		Variable cAttribute2 = new Variable(role.getNameSpace(),role.getName());
+		cAttribute2.setValue(new Value(attribute2));	
+		
+		// lookup mcrl2 names and produce the code
+		String mTestRole = mRole(cAttribute1).getRole(); 
+		String mAttribute1 = mRole(cAttribute1).getAttr();
+		String mAttribute2 = mRole(cAttribute2).getAttr();	
+		String mCondition = codeTestCondition(condition.getString(), test);
+		return "test(" + mCondition + "," + mTestRole + "," + mAttribute1 + "," + mAttribute2 + ")";
+	}
+	
+	private String codeTestCondition(String condition, boolean test) {
+		switch (condition) {
+		case "!=":
+			return test? "NEQ" : "EQ";
+		case "==":
+		default: 
+			return test? "EQ" : "NEQ"; 		
+		}
+	}
 	
 	
 	public Mcrl2VariableSet populateModel() {
