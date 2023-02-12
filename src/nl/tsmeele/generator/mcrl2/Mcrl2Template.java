@@ -185,9 +185,11 @@ private String 	programText() {
 			"              )\n" +
 			"         ) \n" +
 			"     ) +\n" +
-		    " sum attrA,attrB:Attribute . ( \n" +
-		    "     (attrA != attrB && props(attrA) != zero && props(attrB) != zero) -> \n" +
-		    "          (props(attrA) == props(attrB)) -> (testProp(EQ,me,attrA,attrB). \n" +
+		    " sum attrA,attrB:Attribute . ( (attrA != attrB ) -> \n" +
+		    "          (props(attrA) == props(attrB) " + 
+		    "&& props(attrA) != zero && props(attrB) != zero" +
+		     ") -> \n" +
+		    "             (testProp(EQ,me,attrA,attrB). \n" +
 		    "                     Role'(me,props,lockStatusMap,lockHolderMap)) \n" +
 		   	"	       <> (testProp(NEQ,me,attrA,attrB). \n" +
 		    "                     Role'(me,props,lockStatusMap,lockHolderMap)) \n" +

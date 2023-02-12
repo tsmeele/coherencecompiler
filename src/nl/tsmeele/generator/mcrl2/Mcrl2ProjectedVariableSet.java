@@ -22,7 +22,7 @@ public class Mcrl2ProjectedVariableSet extends Mcrl2VariableSet {
 			"([A-Z]+)[,]" +			// g1 = condition e.g. EQ,NEQ
 			"([A-Za-z0-9]+)[,]" +	// g2 = role
 			"([0-9]+)[,]" +			// g3 = attribute1
-			"([0-9]+)[)]");			// g4 = attribute2
+			"([0-9]+)[)][.]");			// g4 = attribute2
 	
 	private class ParseResult {
 		public String consumed, result;	
@@ -131,9 +131,9 @@ public class Mcrl2ProjectedVariableSet extends Mcrl2VariableSet {
 		String attr2 = m.group(4);
 		if (role.equals(testedRole)) {
 			return new ParseResult(m.group(0), "test(" + condition + "," + 
-					testedRole + "," + attr1 + "," + attr2 + ")");
+					testedRole + "," + attr1 + "," + attr2 + ").");
 		}
-		return new ParseResult(m.group(0), "tau");
+		return new ParseResult(m.group(0), "");
 	}
 	
 	
