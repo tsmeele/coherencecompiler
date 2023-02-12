@@ -3,6 +3,6 @@ if x(a==b) then {
 	from x.a to y.c upd1;
 	}
 else {
-	from x.b to y.d upd2;
+	from x.a to y.d upd2;
 	}
 }
