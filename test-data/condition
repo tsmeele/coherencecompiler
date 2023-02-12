@@ -1,0 +1,8 @@
+protocol conditional(x,y) {
+if x(a==b) then {
+	from x.a to y.c upd1;
+	}
+else {
+	from x.b to y.d upd2;
+	}
+}

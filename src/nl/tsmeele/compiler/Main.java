@@ -12,7 +12,7 @@ import static java.util.Map.entry;
 import nl.tsmeele.generator.mcrl2.Mcrl2Checker;
 import nl.tsmeele.generator.mcrl2.Mcrl2Generator;
 import nl.tsmeele.generator.mcrl2.Mcrl2VariableSet;
-import nl.tsmeele.generator.mcrl2.Mcrl2VariablesLocalized;
+import nl.tsmeele.generator.mcrl2.Mcrl2ProjectedVariableSet;
 import nl.tsmeele.generator.plantuml.PlantumlGenerator;
 import nl.tsmeele.grammar.Program;
 
@@ -95,7 +95,7 @@ public class Main {
 				Mcrl2VariableSet mVars = code.getMcrl2().populateModel();
 				if (DEBUG) System.err.println(code.getMcrl2().toString());
 				//if (DEBUG) System.err.println(mVars);
-				Mcrl2VariableSet mVarsLocal = new Mcrl2VariablesLocalized(mVars);
+				Mcrl2VariableSet mVarsLocal = new Mcrl2ProjectedVariableSet(mVars);
 				if (DEBUG) System.err.println("resulting local protocol vars is:\n" + mVarsLocal);
 				
 				// execute model checker tests
