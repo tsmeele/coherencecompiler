@@ -12,16 +12,17 @@ import static java.util.Map.entry;
 import nl.tsmeele.generator.mcrl2.Mcrl2Checker;
 import nl.tsmeele.generator.mcrl2.Mcrl2Generator;
 import nl.tsmeele.generator.mcrl2.Mcrl2VariableSet;
+import nl.tsmeele.generator.mcrl2.Mcrl2VariablesLocalized;
 import nl.tsmeele.generator.plantuml.PlantumlGenerator;
 import nl.tsmeele.grammar.Program;
 
 
 public class Main {
 	static final String PROGRAMNAME = "coherence";
-	static boolean DEBUG = false;
-	static boolean generateMcrl2 = false;
-	static boolean includeBisimulationTest = false;
-	static boolean generatePlantuml = true;
+	static boolean DEBUG = true;
+	static boolean generateMcrl2 = true;
+	static boolean includeBisimulationTest = true;
+	static boolean generatePlantuml = false;
 	static boolean showSyntax = false;
 	static boolean showUsage = false;
 	static InputStream in = null;
@@ -94,7 +95,7 @@ public class Main {
 				Mcrl2VariableSet mVars = code.getMcrl2().populateModel();
 				if (DEBUG) System.err.println(code.getMcrl2().toString());
 				//if (DEBUG) System.err.println(mVars);
-				Mcrl2VariableSet mVarsLocal = mVars.project2localprotocols();
+				Mcrl2VariableSet mVarsLocal = new Mcrl2VariablesLocalized(mVars);
 				if (DEBUG) System.err.println("resulting local protocol vars is:\n" + mVarsLocal);
 				
 				// execute model checker tests

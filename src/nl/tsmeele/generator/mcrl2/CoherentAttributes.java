@@ -17,7 +17,7 @@ public class CoherentAttributes extends ArrayList<AttributeList> implements Clon
 		for (AttributeList attrSet : this) {
 			AttributeList attrs = new AttributeList();
 			for (Attribute attr : attrSet) {
-				attrs.add(attr);
+				attrs.add(attr.clone());
 			}
 			copy.add(attrs);
 		}

@@ -1,0 +1,6 @@
+// this is a bisimulation
+protocol bisim(x,y) {
+coherent y.a, x.b;
+from x to y.a upd;
+from y.a to x.b upd2;
+}

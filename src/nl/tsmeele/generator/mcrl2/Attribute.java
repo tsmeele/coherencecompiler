@@ -1,13 +1,18 @@
 package nl.tsmeele.generator.mcrl2;
 
 
-public class Attribute {
+public class Attribute implements Cloneable {
 	private String role;
 	private int attr;
 	
 	public Attribute(String role, int attr) {
 		this.role = role;
 		this.attr = attr;
+	}
+	
+	@Override
+	public Attribute clone() {
+		return new Attribute(role, attr);
 	}
 	
 	public String toString() {
