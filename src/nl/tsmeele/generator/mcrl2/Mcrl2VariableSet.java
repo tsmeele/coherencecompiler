@@ -80,6 +80,30 @@ public class Mcrl2VariableSet {
 		coherentAttributes[0] = attr1;
 		coherentAttributes[1] = attr2;
 	}
+	
+	public void optimizeProtocols() {
+		Map<String, String> optimized = new HashMap<String, String>();
+		for (String protocol : protocols.keySet()) {
+			String opt = optimized(protocols.get(protocol));
+			if (!opt.equals("tau")) {
+				optimized.put(protocol, opt);
+			}
+		}
+		protocols = optimized;
+	}
+	
+	private String optimized(String protocolSpec) {
+		String twoTau = "tau.tau";
+		String oneTau = "tau";
+		while (protocolSpec.contains(twoTau)) {
+			protocolSpec = protocolSpec.replace(twoTau, oneTau);
+		}
+		if (protocolSpec.endsWith(".tau")) {
+			protocolSpec = protocolSpec.substring(0, protocolSpec.length()-4);
+		}
+		return protocolSpec;
+	}
+	
 
 	private String printMap(Map<String, String> map) {
 		String text = "";

@@ -1,0 +1,125 @@
+// uitgevoerd 25 juni 2023.  mcrl2 deadlock test neemt circa 25 min in beslag
+// dit protocol bevat enkele if statements
+
+parallel 
+
+protocol rcDataObjRename(client1,server,provider,database,consumer1, consumer2) {
+
+// 1. Client requests data object rename 
+// ref: rcDataObjRename() in lib/api/src/rcDataObjRename.cpp
+//      rsDataObjrename() in server/api/src/rsDataObjRename.cpp
+
+from client1 to server.obj1 rsDataObjRename;   
+
+// 2. Server relays request to the ICAT provider that is responsible for data object
+// ref: rsDataObjRename_impl() in server/api/src/rsDataObjRename.cpp 
+
+from server.obj1 to provider.obj1 _rsDataObjRename;
+
+// 3. Provider orchestrates actions while object is locked
+// ref: _rsDataObjrename() in server/api/src/rsDataObjRename.cpp
+// NB: modeled assumptions: 
+//      - object type is regular data object
+//      - rule acpreProcForObjRename is empty
+
+atomic update from provider.obj1 protects database.obj1 {
+  from provider.obj1 to database.obj1 chlRenameObject;
+  from database.obj1 to provider.obj1 ack;
+  if "rename_to_new_collection" then {
+     from provider.obj1 to database.obj1 chlMoveObject;
+     from database.obj1 to provider.obj1 ack;
+  }
+  
+  // 4. If Rename: For each replica, provider requests consumer to update data file path
+  // ref: _rsDataObjRename() calls either syncDataObjPhyPath() per replica, or syncCollPhyPath()
+  // NB: we model a scenario with two replicas
+  //     we model one change per replica
+  from provider.obj1 to consumer1.repl1 update_path;
+  from consumer1.repl1 to provider.obj1 ack;
+  from provider.obj1 to consumer2.repl2 update_path;
+  from consumer2.repl2 to provider.obj1 ack;
+
+  // 5. Provider requests database to commit the transaction
+  from provider.obj1 to database.obj1 chlCommit;
+  from database.obj1 to provider.obj1 ack;
+} // end of atomic action
+
+
+// 6. Server requests ICAT provider to update modify time property of parent collection(s)
+// ref: rsDataObjRename() in server/api/src/rsDataObjRename.cpp  
+
+from server to provider update_mtime_source_collection;
+from provider to server ack;
+if "renamed_to_other_collection" then {
+   from server to provider update_mtime_target_collection;
+   from provider to server ack;
+} 
+// 7. Server reports result back to client
+
+from server.obj1 to client1 ack;
+}
+
+
+and
+
+protocol rcDataObjRename(client2,server,provider,database,consumer1, consumer2) {
+
+// 1. Client requests data object rename 
+// ref: rcDataObjRename() in lib/api/src/rcDataObjRename.cpp
+//      rsDataObjrename() in server/api/src/rsDataObjRename.cpp
+
+from client2 to server.obj1 rsDataObjRename;   
+
+// 2. Server relays request to the ICAT provider that is responsible for data object
+// ref: rsDataObjRename_impl() in server/api/src/rsDataObjRename.cpp 
+
+from server.obj1 to provider.obj1 _rsDataObjRename;
+
+// 3. Provider orchestrates actions while object is locked
+// ref: _rsDataObjrename() in server/api/src/rsDataObjRename.cpp
+// NB: modeled assumptions: 
+//      - object type is regular data object
+//      - rule acpreProcForObjRename is empty
+
+atomic update from provider.obj1 protects database.obj1 {
+  from provider.obj1 to database.obj1 chlRenameObject;
+  from database.obj1 to provider.obj1 ack;
+  if "rename_to_new_collection" then {
+     from provider.obj1 to database.obj1 chlMoveObject;
+     from database.obj1 to provider.obj1 ack;
+  }
+  
+  // 4. If Rename: For each replica, provider requests consumer to update data file path
+  // ref: _rsDataObjRename() calls either syncDataObjPhyPath() per replica, or syncCollPhyPath()
+  // NB: we model a scenario with two replicas
+  //     we model one change per replica
+  from provider.obj1 to consumer1.repl1 update_path;
+  from consumer1.repl1 to provider.obj1 ack;
+  from provider.obj1 to consumer2.repl2 update_path;
+  from consumer2.repl2 to provider.obj1 ack;
+
+  // 5. Provider requests database to commit the transaction
+  from provider.obj1 to database.obj1 chlCommit;
+  from database.obj1 to provider.obj1 ack;
+} // end of atomic action
+
+// 6. Server requests ICAT provider to update modify time property of parent collection(s)
+// ref: rsDataObjRename() in server/api/src/rsDataObjRename.cpp  
+
+from server to provider update_mtime_source_collection;
+from provider to server ack;
+if "renamed_to_other_collection" then {
+   from server to provider update_mtime_target_collection;
+   from provider to server ack;
+} 
+
+// 7. Server reports result back to client
+
+from server.obj1 to client2 ack;
+}
+
+;
+
+
+
+

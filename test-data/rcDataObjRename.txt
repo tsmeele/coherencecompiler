@@ -1,143 +1,59 @@
-// TODO:  THIS IS WORK IN PROGRESS, CURRENT CODE NO TESTED TO COMPILE
+protocol rcDataObjRename(client1,server,provider,database,consumer1, consumer2) {
 
+// 1. Client requests data object rename 
+// ref: rcDataObjRename() in lib/api/src/rcDataObjRename.cpp
+//      rsDataObjrename() in server/api/src/rsDataObjRename.cpp
 
+from client1 to server.obj1 rsDataObjRename;   
 
-protocol rcDataObjRename(client,server,provider,database,consumer) {
+// 2. Server relays request to the ICAT provider that is responsible for data object
+// ref: rsDataObjRename_impl() in server/api/src/rsDataObjRename.cpp 
 
+from server.obj1 to provider.obj1 _rsDataObjRename;
 
-// rcDataObjRename  (lib/api/src/rcDataObjRename.cpp)
-// Client packs its API call in a message, calls server agent using sendApiRequest(message)
-// Server agent unpacks the message, validates that the client is authorized to make the request,
-// and calls the relevant API function, in this case rsDataObjRename 
-// The server agent packs the resulting output into a message, returns it to the client process
+// 3. Provider orchestrates actions while object is locked
+// ref: _rsDataObjrename() in server/api/src/rsDataObjRename.cpp
+// NB: modeled assumptions: 
+//      - object type is regular data object
+//      - rule acpreProcForObjRename is empty
 
-from client to server rsDataObjRename;   
-
-// server/api/src/rsDataObjRename.cpp
-// rsDataObjRename   (updates 
-//   -> rsDataObjRename_impl 
-//        perform checks and redirect to other functions where appropriate:
-//          - source or destination is located in a remote zone
-//          - source or destination are different e.g. one is a special collection
-//          - current process does not have provider role 
-//        -> _rsDataObjRename
-//   if (parent of sourcePath is a registered collection) then update last_write_time(srcParent)
-//   if (parent of destPath is a registered collection) then update last_write_time(destParent)
-
-// for details on _rsDataObjRename see info in bottom of this protocol file
-
-from server to provider _rsDataObjRename;
-
-
-//  TODO 11-jan-2023: check below protocol part
-
-if sameName (sourceName, targetName)  then {
-  from provider to provider acPreProcForObjRename;
-  from provider to database unlinkTargetDataObject;
-  from provider to database chlRenameObject;
-}
-
-if targetCollectionNEQsourceCollection then {
-  from provider to provider acPreProcForObjRename;
-  chlMoveObject;
-}
-// syncCollPhyPath.....
-from provider to database commit;
-from provider to provider acPostProcForObjRename;
-
-
-// EXPLANATION OF THE PROTOCOL, SUMMARY OF iRODS SOURCE CODE
-// ---------------------------------------------------------
-
-// ON PROVIDER: see source of function _rsDataObjRename
-// perform checks + lookup on (srcDataObjInp): 
-//     - if opr = RENAME_DATA_OBJ: 
-//           assert obj exists and require ACCESS_DELETE_OBJECT rights
-//           set srcid = dataId
-//     - if opr = RENAME_COLL:  
-//           assert path exists
-//           set srcid = path 
-//     - if opr is other:
-//           set opr of source and target obj to RENAME_DATA_OBJ and do above actions for this opr
-// if dataobj:
-//    "write"-lock the srcDataObj using try_lock()  
-//    if destDataObjInp exist: 
-//       call rsDataObjUnlink(destDataObjInp) with force_flag explicitly disabled
-
-// if srcDataObjInp is bundle type and RENAME_DATA_OBJ requested: throw error
-
-//    if rename basename of data object is needed
-//        apply rule "acPreProcForObjRename"
-//        chlRenameObject(srcId,destObj)               
-
-//    if rename collection of data object is needed
-//        assert destination collection already exists
-//        apply rule "acPreProcForObjRename", only if not already done
-//        chlMoveobject (srcId,destId)                 
-
-//    enforce phys path consistency:
-//    if RENAME_DATA_OBJ
-//       update all replica->objPath to destDataObjInp->objPath
-//       call syncCallPhyPath(destDataObjInp->objPath) to change related physical file paths
-//    else (RENAME_COLL)
-//       call syncCollPhyPath()  to update the directory name of related replica paths
-//    success: chlCommit() or error: chlRollback() 
-//    
-//    if success: 
-//       apply rule "acPostProcForObjRename"
-
-
-
-
-from server to client readAndProcApiReply;  // lib/core/src procApiRequest
-
-
-
-
-_rsDataObJRename
-  ...zie hierboven
-
-
-
-
-rsDataObjRename
-  rsDataObjRename_impl
-  + update mtime of source_parent_coll and destination_parent_coll
-      = call last_write_time() via rxModColl
-
-
-rsDataObjRename_impl
-  check same zone (source,dest)
-  check destination is not an existing special collection
-  check if src is in sepcial collection and not mounted collection then dest must also be in special collection
-    if so, then call specCollObjRename()
-    if source if mounted coll then call moveMountedCollObj()
-  otherwise:
-    _rsDataObjRename()
-
-
-
-rxModCol  ---> rsModCol ---> _rsModCol
-    performs:
-      apply rule "acPreProcForModifyCoillMeta"
-      chlModColl
-      apply rule "acPostProcForModifyCollMeta" 
-      commit (or rollback)
-
-
+atomic update from provider.obj1 protects database.obj1 {
+  from provider.obj1 to database.obj1 chlRenameObject;
+  from database.obj1 to provider.obj1 ack;
+  if "rename_to_new_collection" then {
+     from provider.obj1 to database.obj1 chlMoveObject;
+     from database.obj1 to provider.obj1 ack;
+  }
   
+  // 4. If Rename: For each replica, provider requests consumer to update data file path
+  // ref: _rsDataObjRename() calls either syncDataObjPhyPath() per replica, or syncCollPhyPath()
+  // NB: we model a scenario with two replicas
+  //     we model one change per replica
+  from provider.obj1 to consumer1.repl1 update_path;
+  from consumer1.repl1 to provider.obj1 ack;
+  from provider.obj1 to consumer2.repl2 update_path;
+  from consumer2.repl2 to provider.obj1 ack;
+
+  // 5. Provider requests database to commit the transaction
+  from provider.obj1 to database.obj1 chlCommit;
+  from database.obj1 to provider.obj1 ack;
+}
+
+// 6. Server requests ICAT provider to update modify time property of parent collection(s)
+// ref: rsDataObjRename() in server/api/src/rsDataObjRename.cpp  
+
+from server to provider update_mtime_source_collection;
+from provider to server ack;
+if "renamed_to_other_collection" then {
+   from server to provider update_mtime_target_collection;
+   from provider to server ack;
+} // end of atomic action
+
+// 7. Server reports result back to client
+
+from server.obj1 to client1 ack;
+}
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-isColl(name, &id)  geeft aan of object bestaat en zo ja geeft diens id
